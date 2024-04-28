@@ -1,0 +1,5 @@
+LICENSE
+pnpm-lock.yaml
+dist/
+tests/fixtures/**/plan.*
+tests/fixtures/**/rendered.md

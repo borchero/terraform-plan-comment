@@ -1,0 +1,14 @@
+{
+  "singleQuote": false,
+  "bracketSpacing": true,
+  "printWidth": 119,
+  "endOfLine": "auto",
+  "tabWidth": 2,
+  "proseWrap": "always",
+  "trailingComma": "none",
+  "semi": false,
+  "overrides": [
+    { "files": "*.js", "options": { "printWidth": 99, "singleQuote": true, "trailingComma": "none" } },
+    { "files": "*.ts", "options": { "printWidth": 99, "singleQuote": true, "trailingComma": "none" } }
+  ]
+}

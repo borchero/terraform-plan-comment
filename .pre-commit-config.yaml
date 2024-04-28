@@ -1,0 +1,40 @@
+exclude: ^dist/
+repos:
+  - repo: local
+    hooks:
+      - id: build
+        name: build
+        entry: pnpm build
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: test:fixtures
+        name: test:fixtures
+        entry: pnpm test:fixtures
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: lint
+        name: lint
+        entry: pnpm lint:fix
+        language: system
+        pass_filenames: false
+        types: [file, ts]
+      - id: prettier
+        name: prettier
+        entry: pnpm prettier
+        language: system
+        pass_filenames: false
+        types_or: [markdown, yaml]
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.19.0
+    hooks:
+      - id: typos
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+        exclude: ^tests/.*/rendered.md$
+      - id: mixed-line-ending
+      - id: trailing-whitespace

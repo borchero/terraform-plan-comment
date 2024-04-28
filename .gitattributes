@@ -1,0 +1,4 @@
+dist/** linguist-generated=true
+pnpm-lock.yaml linguist-generated=true
+tests/fixtures/**/*.json linguist-generated=true
+tests/fixtures/**/*.txt linguist-generated=true

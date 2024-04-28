@@ -1,0 +1,50 @@
+name: Release
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  create-major-tag:
+    name: Create Major Tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get major version
+        id: version
+        run: |
+          MAJOR=$(echo ${{ github.ref_name }} | cut -d'.' -f1 | cut -c2-)
+          echo "major=$MAJOR" >> $GITHUB_OUTPUT
+      - name: Delete existing tag
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.git.deleteRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `tags/v${{ steps.version.outputs.major }}`,
+            });
+      - name: Create new tag
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const newTag = "v${{ steps.version.outputs.major }}";
+            const createdTag = await github.rest.git.createTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: newTag,
+              message: "Pointer to ${{ github.ref_name }}",
+              object: "${{ github.sha }}",
+              type: "commit",
+            });
+            await github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `refs/tags/${newTag}`,
+                sha: createdTag.data.sha
+            });

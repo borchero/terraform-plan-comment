@@ -1,0 +1,23 @@
+name: Terraform Plan Comment
+description: Post the output of `terraform plan` to a PR comment.
+author: Oliver Borchert
+branding:
+  icon: type
+  color: purple
+inputs:
+  token:
+    description: The token to use for authenticating against the GitHub API.
+    required: true
+  planfile:
+    description: The path to the planfile whose changes to post.
+    required: true
+  terraform-cmd:
+    description: The command to execute for calling the Terraform binary.
+    required: true
+    default: terraform
+  id:
+    description: A unique ID for the Terraform deployment.
+    required: false
+runs:
+  using: node20
+  main: dist/index.js

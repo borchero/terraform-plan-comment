@@ -1,0 +1,117 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.8.2",
+  "variables": {
+    "test": {
+      "value": 42
+    }
+  },
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "local_file.test",
+          "mode": "managed",
+          "type": "local_file",
+          "name": "test",
+          "provider_name": "registry.terraform.io/hashicorp/local",
+          "schema_version": 0,
+          "values": {
+            "content": "foo-42",
+            "content_base64": null,
+            "directory_permission": "0777",
+            "file_permission": "0777",
+            "filename": "../test.txt",
+            "sensitive_content": null,
+            "source": null
+          },
+          "sensitive_values": {
+            "content": true,
+            "sensitive_content": true
+          }
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "local_file.test",
+      "mode": "managed",
+      "type": "local_file",
+      "name": "test",
+      "provider_name": "registry.terraform.io/hashicorp/local",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "content": "foo-42",
+          "content_base64": null,
+          "directory_permission": "0777",
+          "file_permission": "0777",
+          "filename": "../test.txt",
+          "sensitive_content": null,
+          "source": null
+        },
+        "after_unknown": {
+          "content_base64sha256": true,
+          "content_base64sha512": true,
+          "content_md5": true,
+          "content_sha1": true,
+          "content_sha256": true,
+          "content_sha512": true,
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {
+          "content": true,
+          "sensitive_content": true
+        }
+      }
+    }
+  ],
+  "configuration": {
+    "provider_config": {
+      "local": {
+        "name": "local",
+        "full_name": "registry.terraform.io/hashicorp/local"
+      },
+      "null": {
+        "name": "null",
+        "full_name": "registry.terraform.io/hashicorp/null"
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "local_file.test",
+          "mode": "managed",
+          "type": "local_file",
+          "name": "test",
+          "provider_config_key": "local",
+          "expressions": {
+            "content": {
+              "references": [
+                "var.test"
+              ]
+            },
+            "filename": {
+              "constant_value": "../test.txt"
+            }
+          },
+          "schema_version": 0
+        }
+      ],
+      "variables": {
+        "test": {
+          "default": 42,
+          "sensitive": true
+        }
+      }
+    }
+  },
+  "applyable": true,
+  "complete": true,
+  "errored": false
+}

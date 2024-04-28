@@ -1,0 +1,19 @@
+[project]
+name = "terraform-plan-comment"
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-arm64"]
+
+[dependencies]
+nodejs = "=20"
+pnpm = "*"
+
+[feature.pre-commit.dependencies]
+pre-commit = "*"
+
+[feature.terraform.dependencies]
+terraform = "*"
+
+[environments]
+default = ["pre-commit", "terraform"]
+terraform = ["terraform"]
+pre-commit = ["pre-commit", "terraform"]

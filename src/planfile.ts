@@ -16,6 +16,7 @@ const planfileSchema = z.object({
       address: z.string(),
       change: z.object({
         actions: z.union([
+          z.tuple([z.literal('no-op')]),
           z.tuple([z.literal('create')]),
           z.tuple([z.literal('delete')]),
           z.tuple([z.literal('update')]),

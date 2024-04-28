@@ -112,12 +112,16 @@ export async function renderPlan({
   terraformCommand: string
   workingDirectory: string
 }): Promise<RenderedPlan> {
+  const options = {
+    cwd: workingDirectory,
+    silent: true
+  }
   const structuredPlanfile = await exec
-    .getExecOutput(terraformCommand, ['show', '-json', planfile], { cwd: workingDirectory })
+    .getExecOutput(terraformCommand, ['show', '-json', planfile], options)
     .then((output) => JSON.parse(output.stdout))
     .then((json) => parsePlanfileJSON(json))
   const humanReadablePlanfile = await exec
-    .getExecOutput(terraformCommand, ['show', '-no-color', planfile], { cwd: workingDirectory })
+    .getExecOutput(terraformCommand, ['show', '-no-color', planfile], options)
     .then((output) => output.stdout)
   return internalRenderPlan(structuredPlanfile, humanReadablePlanfile)
 }

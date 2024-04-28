@@ -9,13 +9,18 @@ async function run() {
     token: core.getInput('token', { required: true }),
     planfile: core.getInput('planfile', { required: true }),
     terraformCmd: core.getInput('terraform-cmd', { required: true }),
+    workingDirectory: core.getInput('working-directory', { required: true }),
     id: core.getInput('id')
   }
   const octokit = github.getOctokit(inputs.token)
 
   // 2) Render plan
   const plan = await core.group('Render plan', () =>
-    renderPlan({ planfile: inputs.planfile, terraformCommand: inputs.terraformCmd })
+    renderPlan({
+      planfile: inputs.planfile,
+      terraformCommand: inputs.terraformCmd,
+      workingDirectory: inputs.workingDirectory
+    })
   )
 
   // 3) Post comment

@@ -15,6 +15,10 @@ inputs:
     description: The command to execute for calling the Terraform binary.
     required: true
     default: terraform
+  working-directory:
+    description: The directory where the Terraform binary should be called.
+    required: true
+    default: "."
   id:
     description: A unique ID for the Terraform deployment.
     required: false

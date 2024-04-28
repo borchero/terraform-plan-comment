@@ -30770,6 +30770,7 @@ var planfileSchema = z.object({
       address: z.string(),
       change: z.object({
         actions: z.union([
+          z.tuple([z.literal("no-op")]),
           z.tuple([z.literal("create")]),
           z.tuple([z.literal("delete")]),
           z.tuple([z.literal("update")]),
@@ -30846,8 +30847,12 @@ async function renderPlan({
   terraformCommand,
   workingDirectory
 }) {
-  const structuredPlanfile = await exec.getExecOutput(terraformCommand, ["show", "-json", planfile], { cwd: workingDirectory }).then((output) => JSON.parse(output.stdout)).then((json) => parsePlanfileJSON(json));
-  const humanReadablePlanfile = await exec.getExecOutput(terraformCommand, ["show", "-no-color", planfile], { cwd: workingDirectory }).then((output) => output.stdout);
+  const options = {
+    cwd: workingDirectory,
+    silent: true
+  };
+  const structuredPlanfile = await exec.getExecOutput(terraformCommand, ["show", "-json", planfile], options).then((output) => JSON.parse(output.stdout)).then((json) => parsePlanfileJSON(json));
+  const humanReadablePlanfile = await exec.getExecOutput(terraformCommand, ["show", "-no-color", planfile], options).then((output) => output.stdout);
   return internalRenderPlan(structuredPlanfile, humanReadablePlanfile);
 }
 

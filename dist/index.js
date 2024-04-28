@@ -30845,10 +30845,8 @@ async function renderPlan({
   planfile,
   terraformCommand
 }) {
-  const structuredPlanfile = await exec.getExecOutput(terraformCommand, ["show", "-json", planfile], { silent: true }).then((output) => JSON.parse(output.stdout)).then((json) => parsePlanfileJSON(json));
-  const humanReadablePlanfile = await exec.getExecOutput(terraformCommand, ["show", "-no-color", planfile], {
-    silent: true
-  }).then((output) => output.stdout);
+  const structuredPlanfile = await exec.getExecOutput(terraformCommand, ["show", "-json", planfile]).then((output) => JSON.parse(output.stdout)).then((json) => parsePlanfileJSON(json));
+  const humanReadablePlanfile = await exec.getExecOutput(terraformCommand, ["show", "-no-color", planfile]).then((output) => output.stdout);
   return internalRenderPlan(structuredPlanfile, humanReadablePlanfile);
 }
 

@@ -111,13 +111,11 @@ export async function renderPlan({
   terraformCommand: string
 }): Promise<RenderedPlan> {
   const structuredPlanfile = await exec
-    .getExecOutput(terraformCommand, ['show', '-json', planfile], { silent: true })
+    .getExecOutput(terraformCommand, ['show', '-json', planfile])
     .then((output) => JSON.parse(output.stdout))
     .then((json) => parsePlanfileJSON(json))
   const humanReadablePlanfile = await exec
-    .getExecOutput(terraformCommand, ['show', '-no-color', planfile], {
-      silent: true
-    })
+    .getExecOutput(terraformCommand, ['show', '-no-color', planfile])
     .then((output) => output.stdout)
   return internalRenderPlan(structuredPlanfile, humanReadablePlanfile)
 }

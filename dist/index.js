@@ -26796,6 +26796,8 @@ function renderComment({
   if (includeFooter === void 0 || includeFooter === true) {
     footer = `
 
+---
+
 _Triggered by @${github.context.actor}, Commit: \`${github.context.payload.pull_request.head.sha}\`_`;
   }
   return `${header}

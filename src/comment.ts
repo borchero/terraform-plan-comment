@@ -71,7 +71,7 @@ export function renderComment({
   let footer = ''
   if (includeFooter === undefined || includeFooter === true) {
     footer =
-      `\n\n_Triggered by @${github.context.actor},` +
+      `\n\n---\n\n_Triggered by @${github.context.actor},` +
       ` Commit: \`${(github.context.payload as PullRequestEvent).pull_request.head.sha}\`_`
   }
 

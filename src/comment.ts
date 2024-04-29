@@ -30,19 +30,19 @@ function renderBody(plan: RenderedPlan): string {
     `${Object.keys(plan.deletedResources ?? {}).length} to delete.**`
 
   if (plan.createdResources) {
-    body += '\n\n### Create'
+    body += '\n\n## Create'
     body += renderResources(plan.createdResources)
   }
   if (plan.updatedResources) {
-    body += '\n\n### Update'
+    body += '\n\n## Update'
     body += renderResources(plan.updatedResources)
   }
   if (plan.recreatedResources) {
-    body += '\n\n### Re-Create'
+    body += '\n\n## Re-Create'
     body += renderResources(plan.recreatedResources)
   }
   if (plan.deletedResources) {
-    body += '\n\n### Delete'
+    body += '\n\n## Delete'
     body += renderResources(plan.deletedResources)
   }
 
@@ -59,7 +59,7 @@ export function renderComment({
   includeFooter?: boolean
 }): string {
   // Build header
-  let header = '## 📝 Terraform Deployment'
+  let header = '# 📝 Terraform Deployment'
   if ((id?.length ?? 0) > 0) {
     header += ` - \`${id}\``
   }

@@ -6,6 +6,7 @@ GitHub Action to post the output of `terraform plan` to a pull request comment.
 
 - Generate a "markdown-native" representation of the plan including foldable sections and coloring
 - Post the plan to pull requests as a "sticky comment"
+- Run as a "native" JavaScript action rather than launching a Docker container
 - Use with or without the Terraform wrapper script provided by
   [hashicorp/setup-terraform](https://github.com/hashicorp/setup-terraform)
 

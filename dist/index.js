@@ -30770,6 +30770,7 @@ var planfileSchema = z.object({
       address: z.string(),
       change: z.object({
         actions: z.union([
+          z.tuple([z.literal("no-op")]),
           z.tuple([z.literal("create")]),
           z.tuple([z.literal("delete")]),
           z.tuple([z.literal("update")]),
@@ -30843,12 +30844,15 @@ function internalRenderPlan(structuredPlan, humanReadablePlan) {
 }
 async function renderPlan({
   planfile,
-  terraformCommand
+  terraformCommand,
+  workingDirectory
 }) {
-  const structuredPlanfile = await exec.getExecOutput(terraformCommand, ["show", "-json", planfile], { silent: true }).then((output) => JSON.parse(output.stdout)).then((json) => parsePlanfileJSON(json));
-  const humanReadablePlanfile = await exec.getExecOutput(terraformCommand, ["show", "-no-color", planfile], {
+  const options = {
+    cwd: workingDirectory,
     silent: true
-  }).then((output) => output.stdout);
+  };
+  const structuredPlanfile = await exec.getExecOutput(terraformCommand, ["show", "-json", planfile], options).then((output) => JSON.parse(output.stdout)).then((json) => parsePlanfileJSON(json));
+  const humanReadablePlanfile = await exec.getExecOutput(terraformCommand, ["show", "-no-color", planfile], options).then((output) => output.stdout);
   return internalRenderPlan(structuredPlanfile, humanReadablePlanfile);
 }
 
@@ -30858,12 +30862,17 @@ async function run() {
     token: core.getInput("token", { required: true }),
     planfile: core.getInput("planfile", { required: true }),
     terraformCmd: core.getInput("terraform-cmd", { required: true }),
+    workingDirectory: core.getInput("working-directory", { required: true }),
     id: core.getInput("id")
   };
   const octokit = github2.getOctokit(inputs.token);
   const plan = await core.group(
     "Render plan",
-    () => renderPlan({ planfile: inputs.planfile, terraformCommand: inputs.terraformCmd })
+    () => renderPlan({
+      planfile: inputs.planfile,
+      terraformCommand: inputs.terraformCmd,
+      workingDirectory: inputs.workingDirectory
+    })
   );
   await core.group("Render comment", () => {
     const comment = renderComment({ plan, id: inputs.id });

@@ -1,5 +1,5 @@
 name: Terraform Plan Comment
-description: Post the output of `terraform plan` to a PR comment.
+description: Post the output of `terraform plan` to a pull request comment.
 author: Oliver Borchert
 branding:
   icon: type

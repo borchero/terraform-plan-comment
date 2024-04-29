@@ -9,7 +9,12 @@ export type RenderedPlan = {
   deletedResources?: Record<string, string>
 }
 
-function extractResourceContent(name: string, humanReadablePlan: string): string[] {
+type ResourceContent = {
+  reason?: string
+  lines: string[]
+}
+
+function extractResourceContent(name: string, humanReadablePlan: string): ResourceContent {
   const lines = humanReadablePlan.split('\n')
 
   // In the plan, find the resource with the appropriate name
@@ -32,13 +37,21 @@ function extractResourceContent(name: string, humanReadablePlan: string): string
     throw Error(`Resource '${name}' cannot be properly extracted from the human-readable plan.`)
   }
 
-  // Eventually, we return the *contents* of the resource block
-  return lines.slice(resourceLineIndex + 1, resourceLineIndex + closingLineIndex)
+  // Eventually, we return the *contents* of the resource block along with a reason (if available)
+  let reason: string | undefined
+  if (resourceLineIndex - resourceHeaderIndex > 1) {
+    const match = lines[resourceLineIndex - 1].match(/\((.*)\)/)
+    if (match) {
+      reason = match[1]
+    }
+  }
+  const result = lines.slice(resourceLineIndex + 1, resourceLineIndex + closingLineIndex)
+  return { reason, lines: result }
 }
 
-function cleanResourceContent(content: string[]): string {
+function formatResourceContent(content: ResourceContent): string {
   // Indentation should be 6 spaces so we can get rid of this in all lines.
-  const aligned = content.map((line) => line.slice(6))
+  const aligned = content.lines.map((line) => line.slice(6))
 
   // If there are now any lines where we find a `+`, `-`, or `~` only after spaces, we move it to
   // the front.
@@ -52,7 +65,13 @@ function cleanResourceContent(content: string[]): string {
 
   // Finally, we need to replace all `~` with `!` if they are the first character
   const diffFinal = diffSuitable.map((line) => (line.startsWith('~') ? '!' + line.slice(1) : line))
-  return diffFinal.join('\n')
+  const formatted = '```diff\n' + diffFinal.join('\n') + '\n```'
+
+  let result = formatted
+  if (content.reason) {
+    result = formatted + `\n\n_→ ${content.reason}_`
+  }
+  return result
 }
 
 function extractResources(
@@ -65,7 +84,7 @@ function extractResources(
   return names.reduce(
     (acc, name) => {
       const content = extractResourceContent(name, humanReadablePlan)
-      acc[name] = cleanResourceContent(content)
+      acc[name] = formatResourceContent(content)
       return acc
     },
     {} as Record<string, string>

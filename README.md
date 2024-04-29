@@ -25,7 +25,19 @@ GitHub Action to post the output of `terraform plan` to a PR comment.
     planfile: .planfile
 ```
 
-**Example Comment:**
+### Example Comments
+
+<details><summary><b>Collapsed</b></summary>
+
+<img width="916" alt="Screenshot 2024-04-30 at 00 07 36" src="https://github.com/borchero/terraform-plan-comment/assets/22455425/b6d0e64c-1c9c-42b8-8060-c096922baa0a">
+
+</details>
+
+<details><summary><b>Expanded</b></summary>
+
+<img width="699" alt="Screenshot 2024-04-30 at 00 08 22" src="https://github.com/borchero/terraform-plan-comment/assets/22455425/c91c319a-276d-4d2d-98a7-52bd24b64d4c">
+
+</details>
 
 ## Parameters
 

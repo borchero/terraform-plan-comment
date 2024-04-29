@@ -12,6 +12,7 @@ variable "test" {
 }
 
 resource "local_file" "test" {
+  count    = 2
   filename = "../test.txt"
-  content  = "foo-${var.test}"
+  content  = "test-${var.test}"
 }

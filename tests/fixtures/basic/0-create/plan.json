@@ -76,10 +76,6 @@
       "local": {
         "name": "local",
         "full_name": "registry.terraform.io/hashicorp/local"
-      },
-      "null": {
-        "name": "null",
-        "full_name": "registry.terraform.io/hashicorp/null"
       }
     },
     "root_module": {

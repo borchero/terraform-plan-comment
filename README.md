@@ -4,7 +4,9 @@ GitHub Action to post the output of `terraform plan` to a pull request comment.
 
 ## Features
 
-- Generate a "markdown-native" representation of the plan including foldable sections and coloring
+- Generate a structured, "markdown-native" representation of the plan
+  - Obtain a high-level overview via foldable sections
+  - Do not lose _any_ information compared to the output of `terraform plan`
 - Post the plan to pull requests as a "sticky comment"
 - Run as a "native" JavaScript action rather than launching a Docker container
 - Use with or without the Terraform wrapper script provided by

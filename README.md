@@ -65,6 +65,7 @@ unless `terraform` cannot be found in the `PATH`.
 The directory where the Terraform binary ought to be called. Defaults to `$GITHUB_WORKSPACE` and _must_ be specified if
 `terraform init` has been run in a different directory. Should be specified relative to `$GITHUB_WORKSPACE`.
 
+<!-- prettier-ignore -->
 > [!IMPORTANT]
 > `planfile` must be specified relative to the working directory.
 

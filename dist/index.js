@@ -26748,7 +26748,7 @@ var github = __toESM(require_github());
 function renderResources(resources) {
   let result = "";
   for (const key of Object.keys(resources).sort()) {
-    const content = "```diff\n" + resources[key] + "\n```";
+    const content = resources[key];
     result += `
 
 <details><summary><code>${key}</code></summary>
@@ -30800,10 +30800,18 @@ function extractResourceContent(name, humanReadablePlan) {
   if (closingLineIndex < 0) {
     throw Error(`Resource '${name}' cannot be properly extracted from the human-readable plan.`);
   }
-  return lines.slice(resourceLineIndex + 1, resourceLineIndex + closingLineIndex);
+  let reason;
+  if (resourceLineIndex - resourceHeaderIndex > 1) {
+    const match = lines[resourceLineIndex - 1].match(/\((.*)\)/);
+    if (match) {
+      reason = match[1];
+    }
+  }
+  const result = lines.slice(resourceLineIndex + 1, resourceLineIndex + closingLineIndex);
+  return { reason, lines: result };
 }
-function cleanResourceContent(content) {
-  const aligned = content.map((line) => line.slice(6));
+function formatResourceContent(content) {
+  const aligned = content.lines.map((line) => line.slice(6));
   const diffSuitable = aligned.map((line) => {
     const matches = line.match(/^( +)([+-~])( .*)$/);
     if (matches?.length === 4) {
@@ -30812,7 +30820,14 @@ function cleanResourceContent(content) {
     return line;
   });
   const diffFinal = diffSuitable.map((line) => line.startsWith("~") ? "!" + line.slice(1) : line);
-  return diffFinal.join("\n");
+  const formatted = "```diff\n" + diffFinal.join("\n") + "\n```";
+  let result = formatted;
+  if (content.reason) {
+    result = formatted + `
+
+_\u2192 ${content.reason}_`;
+  }
+  return result;
 }
 function extractResources(names, humanReadablePlan) {
   if (names.length === 0) {
@@ -30821,7 +30836,7 @@ function extractResources(names, humanReadablePlan) {
   return names.reduce(
     (acc, name) => {
       const content = extractResourceContent(name, humanReadablePlan);
-      acc[name] = cleanResourceContent(content);
+      acc[name] = formatResourceContent(content);
       return acc;
     },
     {}

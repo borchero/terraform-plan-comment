@@ -6,7 +6,7 @@ import type { RenderedPlan } from './render'
 function renderResources(resources: Record<string, string>): string {
   let result = ''
   for (const key of Object.keys(resources).sort()) {
-    const content = '```diff\n' + resources[key] + '\n```'
+    const content = resources[key]
     result += `\n\n<details><summary><code>${key}</code></summary>\n\n${content}\n\n</details>`
   }
   return result

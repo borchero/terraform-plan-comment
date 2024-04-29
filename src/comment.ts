@@ -30,19 +30,19 @@ function renderBody(plan: RenderedPlan): string {
     `${Object.keys(plan.deletedResources ?? {}).length} to delete.**`
 
   if (plan.createdResources) {
-    body += '\n\n### Create'
+    body += '\n\n### ✨ Create'
     body += renderResources(plan.createdResources)
   }
   if (plan.updatedResources) {
-    body += '\n\n### Update'
+    body += '\n\n### ♻️ Update'
     body += renderResources(plan.updatedResources)
   }
   if (plan.recreatedResources) {
-    body += '\n\n### Re-Create'
+    body += '\n\n### ⚙️ Re-Create'
     body += renderResources(plan.recreatedResources)
   }
   if (plan.deletedResources) {
-    body += '\n\n### Delete'
+    body += '\n\n### 🗑️ Delete'
     body += renderResources(plan.deletedResources)
   }
 
@@ -71,7 +71,7 @@ export function renderComment({
   let footer = ''
   if (includeFooter === undefined || includeFooter === true) {
     footer =
-      `\n\n_Triggered by @${github.context.actor},` +
+      `\n\n---\n\n_Triggered by @${github.context.actor},` +
       ` Commit: \`${(github.context.payload as PullRequestEvent).pull_request.head.sha}\`_`
   }
 

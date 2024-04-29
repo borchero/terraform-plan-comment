@@ -26765,19 +26765,19 @@ function renderBody(plan) {
   }
   let body = `**\u2192 Resource Changes: ${Object.keys(plan.createdResources ?? {}).length} to create, ${Object.keys(plan.updatedResources ?? {}).length} to update, ${Object.keys(plan.recreatedResources ?? {}).length} to re-create, ${Object.keys(plan.deletedResources ?? {}).length} to delete.**`;
   if (plan.createdResources) {
-    body += "\n\n### Create";
+    body += "\n\n### \u2728 Create";
     body += renderResources(plan.createdResources);
   }
   if (plan.updatedResources) {
-    body += "\n\n### Update";
+    body += "\n\n### \u267B\uFE0F Update";
     body += renderResources(plan.updatedResources);
   }
   if (plan.recreatedResources) {
-    body += "\n\n### Re-Create";
+    body += "\n\n### \u2699\uFE0F Re-Create";
     body += renderResources(plan.recreatedResources);
   }
   if (plan.deletedResources) {
-    body += "\n\n### Delete";
+    body += "\n\n### \u{1F5D1}\uFE0F Delete";
     body += renderResources(plan.deletedResources);
   }
   return body;
@@ -26795,6 +26795,8 @@ function renderComment({
   let footer = "";
   if (includeFooter === void 0 || includeFooter === true) {
     footer = `
+
+---
 
 _Triggered by @${github.context.actor}, Commit: \`${github.context.payload.pull_request.head.sha}\`_`;
   }

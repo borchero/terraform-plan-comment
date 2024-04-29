@@ -7,11 +7,17 @@ terraform {
 }
 
 variable "test" {
-  default   = 42
+  default   = 40
   sensitive = true
 }
 
 resource "local_file" "test" {
+  count    = 1
   filename = "../test.txt"
-  content  = "foo-${var.test}"
+  content  = "test-${var.test}"
+}
+
+resource "local_file" "another" {
+  filename = "../another.txt"
+  content  = "Hello terraform-plan-comment!"
 }

@@ -1,0 +1,38 @@
+name: End-to-End
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  simple-test:
+    name: Simple Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@v3
+      - name: Setup - initialize
+        run: terraform init
+        working-directory: tests/ci/0-setup
+      - name: Setup - apply
+        run: terraform apply -auto-approve -state ../.tfstate
+        working-directory: tests/ci/0-setup
+      - name: Change - initialize
+        run: terraform init
+        working-directory: tests/ci/1-change
+      - name: Change - plan
+        run: terraform plan -state ../.tfstate -out .planfile
+        working-directory: tests/ci/1-change
+      - name: Post PR comment
+        uses: ./
+        with:
+          token: ${{ github.token }}
+          planfile: .planfile
+          working-directory: tests/ci/1-change

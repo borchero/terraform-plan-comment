@@ -2,7 +2,7 @@
 
 **→ Resource Changes: 0 to create, 0 to update, 1 to re-create, 0 to delete.**
 
-### Re-Create
+### ⚙️ Re-Create
 
 <details><summary><code>local_file.test</code></summary>
 

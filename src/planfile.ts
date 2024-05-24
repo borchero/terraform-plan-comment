@@ -18,9 +18,11 @@ const planfileSchema = z.object({
         actions: z.union([
           z.tuple([z.literal('no-op')]),
           z.tuple([z.literal('create')]),
+          z.tuple([z.literal('read')]),
           z.tuple([z.literal('delete')]),
           z.tuple([z.literal('update')]),
           z.tuple([z.literal('delete'), z.literal('create')])
+          z.tuple([z.literal('create'), z.literal('delete')])
         ])
       })
     })

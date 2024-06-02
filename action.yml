@@ -20,7 +20,7 @@ inputs:
     required: true
     default: "."
   id:
-    description: A unique ID for the Terraform deployment.
+    description: A unique ID for the Terraform plan.
     required: false
 runs:
   using: node20

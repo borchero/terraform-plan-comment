@@ -26172,7 +26172,7 @@ function renderComment({
   id,
   includeFooter
 }) {
-  let header = "## \u{1F4DD} Terraform Deployment";
+  let header = "## \u{1F4DD} Terraform Plan";
   if ((id?.length ?? 0) > 0) {
     header += ` - \`${id}\``;
   }

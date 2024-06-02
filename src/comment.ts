@@ -59,7 +59,7 @@ export function renderComment({
   includeFooter?: boolean
 }): string {
   // Build header
-  let header = '## 📝 Terraform Deployment'
+  let header = '## 📝 Terraform Plan'
   if ((id?.length ?? 0) > 0) {
     header += ` - \`${id}\``
   }

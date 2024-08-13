@@ -26172,7 +26172,6 @@ function renderComment({
   header,
   includeFooter
 }) {
-  let fullHeader = "## \u{1F4DD} Terraform Plan";
   const body = renderBody(plan);
   let footer = "";
   if (includeFooter === void 0 || includeFooter === true) {
@@ -26182,7 +26181,7 @@ function renderComment({
 
 _Triggered by @${github.context.actor}, Commit: \`${github.context.payload.pull_request.head.sha}\`_`;
   }
-  return `${fullHeader}
+  return `## ${header}
 
 ${body}${footer}`;
 }

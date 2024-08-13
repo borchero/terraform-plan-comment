@@ -58,9 +58,6 @@ export function renderComment({
   header: string
   includeFooter?: boolean
 }): string {
-  // Build header
-  let fullHeader = '## 📝 Terraform Plan'
-
   // Build body
   const body = renderBody(plan)
 
@@ -72,7 +69,7 @@ export function renderComment({
       ` Commit: \`${(github.context.payload as PullRequestEvent).pull_request.head.sha}\`_`
   }
 
-  return `${fullHeader}\n\n${body}${footer}`
+  return `## ${header}\n\n${body}${footer}`
 }
 
 export async function createOrUpdateComment({

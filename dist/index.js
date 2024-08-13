@@ -26169,13 +26169,9 @@ function renderBody(plan) {
 }
 function renderComment({
   plan,
-  id,
+  header,
   includeFooter
 }) {
-  let header = "## \u{1F4DD} Terraform Deployment";
-  if ((id?.length ?? 0) > 0) {
-    header += ` - \`${id}\``;
-  }
   const body = renderBody(plan);
   let footer = "";
   if (includeFooter === void 0 || includeFooter === true) {
@@ -26185,7 +26181,7 @@ function renderComment({
 
 _Triggered by @${github.context.actor}, Commit: \`${github.context.payload.pull_request.head.sha}\`_`;
   }
-  return `${header}
+  return `## ${header}
 
 ${body}${footer}`;
 }
@@ -30272,7 +30268,7 @@ async function run() {
     planfile: core.getInput("planfile", { required: true }),
     terraformCmd: core.getInput("terraform-cmd", { required: true }),
     workingDirectory: core.getInput("working-directory", { required: true }),
-    id: core.getInput("id")
+    header: core.getInput("header", { required: true })
   };
   const octokit = github2.getOctokit(inputs.token);
   const plan = await core.group(
@@ -30284,7 +30280,7 @@ async function run() {
     })
   );
   await core.group("Render comment", () => {
-    const comment = renderComment({ plan, id: inputs.id });
+    const comment = renderComment({ plan, header: inputs.header });
     return createOrUpdateComment({ octokit, content: comment });
   });
 }

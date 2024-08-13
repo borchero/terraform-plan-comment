@@ -19,9 +19,10 @@ inputs:
     description: The directory where the Terraform binary should be called.
     required: true
     default: "."
-  id:
-    description: A unique ID for the Terraform deployment.
-    required: false
+  header:
+    description: The header to use for the pull request comment.
+    required: true
+    default: 📝 Terraform Plan
 runs:
   using: node20
   main: dist/index.js

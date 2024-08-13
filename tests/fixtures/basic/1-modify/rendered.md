@@ -1,4 +1,4 @@
-## 📝 Terraform Deployment
+## 📝 Terraform Plan
 
 **→ Resource Changes: 0 to create, 0 to update, 1 to re-create, 0 to delete.**
 

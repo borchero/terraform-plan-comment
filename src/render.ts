@@ -108,7 +108,11 @@ export function internalRenderPlan(
     .filter((r) => r.change.actions.toString() === ['update'].toString())
     .map((r) => r.address)
   const recreatedResources = structuredPlan.resource_changes
-    .filter((r) => r.change.actions.toString() === ['delete', 'create'].toString())
+    .filter(
+      (r) =>
+        r.change.actions.toString() === ['delete', 'create'].toString() ||
+        r.change.actions.toString() === ['create', 'delete'].toString()
+    )
     .map((r) => r.address)
   const deletedResources = structuredPlan.resource_changes
     .filter((r) => r.change.actions.toString() === ['delete'].toString())

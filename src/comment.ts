@@ -51,19 +51,13 @@ function renderBody(plan: RenderedPlan): string {
 
 export function renderComment({
   plan,
-  id,
+  header,
   includeFooter
 }: {
   plan: RenderedPlan
-  id?: string
+  header: string
   includeFooter?: boolean
 }): string {
-  // Build header
-  let header = '## 📝 Terraform Deployment'
-  if ((id?.length ?? 0) > 0) {
-    header += ` - \`${id}\``
-  }
-
   // Build body
   const body = renderBody(plan)
 
@@ -75,7 +69,7 @@ export function renderComment({
       ` Commit: \`${(github.context.payload as PullRequestEvent).pull_request.head.sha}\`_`
   }
 
-  return `${header}\n\n${body}${footer}`
+  return `## ${header}\n\n${body}${footer}`
 }
 
 export async function createOrUpdateComment({

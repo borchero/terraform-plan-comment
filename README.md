@@ -22,7 +22,7 @@ GitHub Action to post the output of `terraform plan` to a pull request comment.
 - name: Plan
   run: terraform plan -out .planfile
 - name: Post PR comment
-  uses: borchero/terraform-plan-comment@v1
+  uses: borchero/terraform-plan-comment@v2
   with:
     token: ${{ github.token }}
     planfile: .planfile

@@ -72,7 +72,7 @@ The directory where the Terraform binary ought to be called. Defaults to `$GITHU
 > [!IMPORTANT]
 > `planfile` must be specified relative to the working directory.
 
-### `id`
+### `header`
 
-A custom identifier for the Terraform execution. This allows to distinguish multiple Terraform runs: each sticky pull
-request comment is tied to an ID.
+The header that is used for the pull request comment posted by this action. Changing the default allows to distinguish
+multiple Terraform runs: each sticky pull request comment is identified by its header.

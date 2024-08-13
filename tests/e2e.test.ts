@@ -8,7 +8,11 @@ test.each(['basic/0-create', 'basic/1-modify', 'basic/2-delete'])('parse-success
   const planTxt = fs.readFileSync(`tests/fixtures/${arg}/plan.txt`, 'utf-8')
   const planfile = parsePlanfileJSON(planJson)
   const renderedPlan = internalRenderPlan(planfile, planTxt)
-  const renderedComment = renderComment({ plan: renderedPlan, includeFooter: false })
+  const renderedComment = renderComment({
+    plan: renderedPlan,
+    header: '📝 Terraform Plan',
+    includeFooter: false
+  })
 
   if (process.env.GENERATE_FIXTURE === '1') {
     fs.writeFileSync(`tests/fixtures/${arg}/rendered.md`, renderedComment)

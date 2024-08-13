@@ -30162,9 +30162,11 @@ var planfileSchema = z.object({
         actions: z.union([
           z.tuple([z.literal("no-op")]),
           z.tuple([z.literal("create")]),
+          z.tuple([z.literal("read")]),
           z.tuple([z.literal("delete")]),
           z.tuple([z.literal("update")]),
-          z.tuple([z.literal("delete"), z.literal("create")])
+          z.tuple([z.literal("delete"), z.literal("create")]),
+          z.tuple([z.literal("create"), z.literal("delete")])
         ])
       })
     })
@@ -30238,7 +30240,9 @@ function internalRenderPlan(structuredPlan, humanReadablePlan) {
   }
   const createdResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["create"].toString()).map((r) => r.address);
   const updatedResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["update"].toString()).map((r) => r.address);
-  const recreatedResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["delete", "create"].toString()).map((r) => r.address);
+  const recreatedResources = structuredPlan.resource_changes.filter(
+    (r) => r.change.actions.toString() === ["delete", "create"].toString() || r.change.actions.toString() === ["create", "delete"].toString()
+  ).map((r) => r.address);
   const deletedResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["delete"].toString()).map((r) => r.address);
   return {
     createdResources: extractResources(createdResources, humanReadablePlan),

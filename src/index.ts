@@ -25,9 +25,35 @@ async function run() {
 
   // 3) Post comment
   await core.group('Render comment', () => {
-    const comment = renderComment({ plan, header: inputs.header })
-    return createOrUpdateComment({ octokit, content: comment })
-  })
+    const commentFull = renderComment({ plan, header: inputs.header })
+
+    // Check comment size
+    if (isValidComment(commentFull)) {
+      return createOrUpdateComment({ octokit, content: commentFull })
+    } 
+    else {
+      // Truncate comment and provide link to download plan file
+      let bodyOverride = `Terraform plan too large. Download plan file directly: [here](${getTerraformPlanLink()})`
+      const commentTruncated = renderComment({ plan, header: inputs.header, includeFooter: true, bodyOverride: bodyOverride })
+
+    return createOrUpdateComment({ octokit, content: commentTruncated })
+    }
+  }
+)
+
+// Generate link to terraform plan file artifact
+function getTerraformPlanLink() {
+  const repo = github.context.repo
+  const runId = github.context.runId
+  return `https://github.com/${repo}/actions/runs/${runId}/artifacts`
+}
+
+// Ensure comment size is within GitHub's limits
+function isValidComment(comment: string) {
+  if (comment.length > 65535) {
+    return false
+  }
+  return true
 }
 
 async function main() {

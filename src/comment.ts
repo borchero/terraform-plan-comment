@@ -52,14 +52,17 @@ function renderBody(plan: RenderedPlan): string {
 export function renderComment({
   plan,
   header,
-  includeFooter
+  includeFooter,
+  bodyOverride,
 }: {
   plan: RenderedPlan
   header: string
   includeFooter?: boolean
+  bodyOverride?: string
+
 }): string {
-  // Build body
-  const body = renderBody(plan)
+  // Build body if bodyOverride is null
+  const body = bodyOverride ?? renderBody(plan)
 
   // Build footer
   let footer = ''

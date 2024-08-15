@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { createOrUpdateComment, renderComment, isValidComment } from './comment'
+import { createOrUpdateComment, renderComment, isValidComment, generatePlanLink } from './comment'
 import { renderPlan } from './render'
 
 async function run() {
@@ -30,22 +30,19 @@ async function run() {
     // Check comment size
     if (isValidComment(commentFull)) {
       return createOrUpdateComment({ octokit, content: commentFull })
-    }
-    else {
+    } else {
       // Truncate comment and provide link to download plan file
-      const bodyOverride = `Terraform plan too large. Download plan file directly: [here](${getTerraformPlanLink()})`
-      const commentTruncated = renderComment({ plan, header: inputs.header, includeFooter: true, bodyOverride: bodyOverride })
+      const bodyOverride = `Terraform plan too large. Download plan file directly: [here](${generatePlanLink()})`
+      const commentTruncated = renderComment({
+        plan,
+        header: inputs.header,
+        includeFooter: true,
+        bodyOverride
+      })
 
-    return createOrUpdateComment({ octokit, content: commentTruncated })
+      return createOrUpdateComment({ octokit, content: commentTruncated })
     }
-  }
-)}
-
-// Generate link to terraform plan file artifact
-function getTerraformPlanLink() {
-  const repo = github.context.repo
-  const runId = github.context.runId
-  return `https://github.com/${repo}/actions/runs/${runId}/artifacts`
+  })
 }
 
 async function main() {

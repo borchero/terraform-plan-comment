@@ -57,6 +57,13 @@ export function isValidComment(comment: string) {
   return true
 }
 
+// Generate link to terraform plan file artifact
+export function generatePlanLink() {
+  const repo = github.context.repo
+  const runId = github.context.runId
+  return `https://github.com/${repo}/actions/runs/${runId}/artifacts`
+}
+
 export function renderComment({
   plan,
   header,
@@ -67,7 +74,6 @@ export function renderComment({
   header: string
   includeFooter?: boolean
   bodyOverride?: string
-
 }): string {
   // Build body if bodyOverride is null
   const body = bodyOverride ?? renderBody(plan)

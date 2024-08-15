@@ -49,11 +49,19 @@ function renderBody(plan: RenderedPlan): string {
   return body
 }
 
+// Ensure comment size is within GitHub's limits
+export function isValidComment(comment: string) {
+  if (comment.length > 65535) {
+    return false
+  }
+  return true
+}
+
 export function renderComment({
   plan,
   header,
   includeFooter,
-  bodyOverride,
+  bodyOverride
 }: {
   plan: RenderedPlan
   header: string

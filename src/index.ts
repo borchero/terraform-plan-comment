@@ -32,14 +32,13 @@ async function run() {
       return createOrUpdateComment({ octokit, content: commentFull })
     } else {
       // Truncate comment and provide link to download plan file
-      const bodyOverride = `Terraform plan too large. Download plan file directly: [here](${generatePlanLink()})`
+      const errorMessage = `Terraform plan too large. Download plan file directly: [here](${generatePlanLink()})`
       const commentTruncated = renderComment({
         plan,
         header: inputs.header,
         includeFooter: true,
-        bodyOverride
+        errorMessage
       })
-
       return createOrUpdateComment({ octokit, content: commentTruncated })
     }
   })

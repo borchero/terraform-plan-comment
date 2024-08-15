@@ -50,11 +50,8 @@ function renderBody(plan: RenderedPlan): string {
 }
 
 // Ensure comment size is within GitHub's limits
-export function isValidComment(comment: string) {
-  if (comment.length > 65535) {
-    return false
-  }
-  return true
+export function isValidComment(comment: string): boolean {
+  return comment.length <= 65536
 }
 
 // Generate link to terraform plan file artifact
@@ -68,15 +65,15 @@ export function renderComment({
   plan,
   header,
   includeFooter,
-  bodyOverride
+  errorMessage
 }: {
   plan: RenderedPlan
   header: string
   includeFooter?: boolean
-  bodyOverride?: string
+  errorMessage?: string
 }): string {
-  // Build body if bodyOverride is null
-  const body = bodyOverride ?? renderBody(plan)
+  // Build body
+  const body = renderBody(plan)
 
   // Build footer
   let footer = ''
@@ -85,8 +82,11 @@ export function renderComment({
       `\n\n---\n\n_Triggered by @${github.context.actor},` +
       ` Commit: \`${(github.context.payload as PullRequestEvent).pull_request.head.sha}\`_`
   }
-
-  return `## ${header}\n\n${body}${footer}`
+  let comment = `## ${header}\n\n${body}${footer}`
+  if (comment.length > 65536) {
+    comment = `## ${header}\n\n** Terraform plan too large **`
+  }
+  return comment
 }
 
 export async function createOrUpdateComment({

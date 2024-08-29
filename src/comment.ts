@@ -64,13 +64,11 @@ export function generatePlanLink() {
 export function renderComment({
   plan,
   header,
-  includeFooter,
-  errorMessage
+  includeFooter
 }: {
   plan: RenderedPlan
   header: string
   includeFooter?: boolean
-  errorMessage?: string
 }): string {
   // Build body
   const body = renderBody(plan)

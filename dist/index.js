@@ -30063,7 +30063,7 @@ var planfileSchema = z.object({
         ])
       })
     })
-  )
+  ).optional()
 });
 function parsePlanfileJSON(json) {
   return planfileSchema.parse(json);
@@ -30128,7 +30128,7 @@ function extractResources(names, humanReadablePlan) {
   );
 }
 function internalRenderPlan(structuredPlan, humanReadablePlan) {
-  if (structuredPlan.resource_changes.length === 0) {
+  if (structuredPlan.resource_changes === void 0 || structuredPlan.resource_changes.length === 0) {
     return {};
   }
   const createdResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["create"].toString()).map((r) => r.address);

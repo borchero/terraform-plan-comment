@@ -96,7 +96,10 @@ export function internalRenderPlan(
   humanReadablePlan: string
 ): RenderedPlan {
   // If there are no changes, we do not need to build any sections
-  if (structuredPlan.resource_changes.length === 0) {
+  if (
+    structuredPlan.resource_changes === undefined ||
+    structuredPlan.resource_changes.length === 0
+  ) {
     return {}
   }
 

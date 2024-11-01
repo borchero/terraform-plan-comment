@@ -3,6 +3,21 @@ import * as github from '@actions/github'
 import { createOrUpdateComment, renderComment } from './comment'
 import { renderPlan } from './render'
 
+// Ensure comment size is within GitHub's limits
+function isValidComment(comment: string) {
+  if (comment.length > 65535) {
+    return false
+  }
+  return true
+}
+
+// Generate link to terraform plan file artifact
+function getTerraformPlanLink() {
+  const repo = github.context.repo
+  const runId = github.context.runId
+  return `https://github.com/${repo}/actions/runs/${runId}/artifacts`
+}
+
 async function run() {
   // 1) Setup
   const inputs = {
@@ -30,30 +45,18 @@ async function run() {
     // Check comment size
     if (isValidComment(commentFull)) {
       return createOrUpdateComment({ octokit, content: commentFull })
-    } 
-    else {
+    } else {
       // Truncate comment and provide link to download plan file
-      let bodyOverride = `Terraform plan too large. Download plan file directly: [here](${getTerraformPlanLink()})`
-      const commentTruncated = renderComment({ plan, header: inputs.header, includeFooter: true, bodyOverride: bodyOverride })
-
-    return createOrUpdateComment({ octokit, content: commentTruncated })
+      const bodyOverride = `Terraform plan too large. Download plan file directly: [here](${getTerraformPlanLink()})`
+      const commentTruncated = renderComment({
+        plan,
+        header: inputs.header,
+        includeFooter: true,
+        bodyOverride
+      })
+      return createOrUpdateComment({ octokit, content: commentTruncated })
     }
-  }
-)
-
-// Generate link to terraform plan file artifact
-function getTerraformPlanLink() {
-  const repo = github.context.repo
-  const runId = github.context.runId
-  return `https://github.com/${repo}/actions/runs/${runId}/artifacts`
-}
-
-// Ensure comment size is within GitHub's limits
-function isValidComment(comment: string) {
-  if (comment.length > 65535) {
-    return false
-  }
-  return true
+  })
 }
 
 async function main() {

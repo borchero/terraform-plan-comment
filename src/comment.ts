@@ -17,7 +17,8 @@ function renderBody(plan: RenderedPlan): string {
     !plan.createdResources &&
     !plan.recreatedResources &&
     !plan.updatedResources &&
-    !plan.deletedResources
+    !plan.deletedResources &&
+    !plan.importedResources
   ) {
     return '**→ No Resource Changes!**'
   }
@@ -27,7 +28,8 @@ function renderBody(plan: RenderedPlan): string {
     `${Object.keys(plan.createdResources ?? {}).length} to create, ` +
     `${Object.keys(plan.updatedResources ?? {}).length} to update, ` +
     `${Object.keys(plan.recreatedResources ?? {}).length} to re-create, ` +
-    `${Object.keys(plan.deletedResources ?? {}).length} to delete.**`
+    `${Object.keys(plan.deletedResources ?? {}).length} to delete, ` +
+    `${Object.keys(plan.importedResources ?? {}).length} to import.**`
 
   if (plan.createdResources) {
     body += '\n\n### ✨ Create'
@@ -45,6 +47,10 @@ function renderBody(plan: RenderedPlan): string {
     body += '\n\n### 🗑️ Delete'
     body += renderResources(plan.deletedResources)
   }
+  if (plan.importedResources) {
+    body += '\n\n### 📥 Import'
+    body += renderResources(plan.importedResources)
+  }
 
   return body
 }
@@ -53,13 +59,12 @@ export function renderComment({
   plan,
   header,
   includeFooter,
-  bodyOverride,
+  bodyOverride
 }: {
   plan: RenderedPlan
   header: string
   includeFooter?: boolean
   bodyOverride?: string
-
 }): string {
   // Build body if bodyOverride is null
   const body = bodyOverride ?? renderBody(plan)

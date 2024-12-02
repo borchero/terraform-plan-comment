@@ -24,7 +24,6 @@ export default [
       "@typescript-eslint": typescriptEslint,
       prettier
     },
-
     languageOptions: {
       parser: tsParser,
       ecmaVersion: 2020,
@@ -34,35 +33,29 @@ export default [
         project: "./tsconfig.json"
       }
     },
-
     rules: {
       "import/order": "error",
       "no-use-before-define": "off",
       "n/no-callback-literal": "off",
-
       "@typescript-eslint/consistent-type-imports": [
         "error",
         {
           prefer: "type-imports"
         }
       ],
-
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
           argsIgnorePattern: "^_"
         }
       ],
-
       "@typescript-eslint/no-use-before-define": "error",
-
       "@typescript-eslint/no-floating-promises": [
         "error",
         {
           ignoreVoid: false
         }
       ],
-
       "prettier/prettier": "error"
     }
   }

@@ -23,6 +23,10 @@ inputs:
     description: The header to use for the pull request comment.
     required: true
     default: 📝 Terraform Plan
+  skip-empty:
+    description: Whether to skip posting a pull request comment when no changes need to be performed.
+    required: true
+    default: "false"
 runs:
   using: node20
   main: dist/index.js

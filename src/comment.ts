@@ -1,7 +1,7 @@
 import type { GitHub } from '@actions/github/lib/utils'
 import * as github from '@actions/github'
 import type { PullRequestEvent } from '@octokit/webhooks-types'
-import type { RenderedPlan } from './render'
+import { planIsEmpty, type RenderedPlan } from './render'
 
 function renderResources(resources: Record<string, string>): string {
   let result = ''
@@ -13,12 +13,7 @@ function renderResources(resources: Record<string, string>): string {
 }
 
 function renderBody(plan: RenderedPlan): string {
-  if (
-    !plan.createdResources &&
-    !plan.recreatedResources &&
-    !plan.updatedResources &&
-    !plan.deletedResources
-  ) {
+  if (planIsEmpty(plan)) {
     return '**→ No Resource Changes!**'
   }
 

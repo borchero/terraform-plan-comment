@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { createOrUpdateComment, renderComment } from './comment'
+import { createOrUpdateComment, renderComment, isValidComment, generatePlanLink } from './comment'
 import { renderPlan } from './render'
 
 async function run() {
@@ -25,8 +25,22 @@ async function run() {
 
   // 3) Post comment
   await core.group('Render comment', () => {
-    const comment = renderComment({ plan, header: inputs.header })
-    return createOrUpdateComment({ octokit, content: comment })
+    const commentFull = renderComment({ plan, header: inputs.header })
+
+    // Check comment size
+    if (isValidComment(commentFull)) {
+      return createOrUpdateComment({ octokit, content: commentFull })
+    } else {
+      // Truncate comment and provide link to download plan file
+      const errorMessage = `Terraform plan too large. Download plan file directly: [here](${generatePlanLink()})`
+      const commentTruncated = renderComment({
+        plan,
+        header: inputs.header,
+        includeFooter: true,
+        errorMessage
+      })
+      return createOrUpdateComment({ octokit, content: commentTruncated })
+    }
   })
 }
 

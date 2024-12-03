@@ -19747,7 +19747,7 @@ var require_core = __commonJS({
       return inputs.map((input) => input.trim());
     }
     exports2.getMultilineInput = getMultilineInput;
-    function getBooleanInput(name, options) {
+    function getBooleanInput2(name, options) {
       const trueValue = ["true", "True", "TRUE"];
       const falseValue = ["false", "False", "FALSE"];
       const val = getInput2(name, options);
@@ -19758,7 +19758,7 @@ var require_core = __commonJS({
       throw new TypeError(`Input does not meet YAML 1.2 "Core Schema" specification: ${name}
 Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
     }
-    exports2.getBooleanInput = getBooleanInput;
+    exports2.getBooleanInput = getBooleanInput2;
     function setOutput(name, value) {
       const filePath = process.env["GITHUB_OUTPUT"] || "";
       if (filePath) {
@@ -26544,89 +26544,6 @@ var github2 = __toESM(require_github());
 
 // src/comment.ts
 var github = __toESM(require_github());
-function renderResources(resources) {
-  let result = "";
-  for (const key of Object.keys(resources).sort()) {
-    const content = resources[key];
-    result += `
-
-<details><summary><code>${key}</code></summary>
-
-${content}
-
-</details>`;
-  }
-  return result;
-}
-function renderBody(plan) {
-  if (!plan.createdResources && !plan.recreatedResources && !plan.updatedResources && !plan.deletedResources) {
-    return "**\u2192 No Resource Changes!**";
-  }
-  let body = `**\u2192 Resource Changes: ${Object.keys(plan.createdResources ?? {}).length} to create, ${Object.keys(plan.updatedResources ?? {}).length} to update, ${Object.keys(plan.recreatedResources ?? {}).length} to re-create, ${Object.keys(plan.deletedResources ?? {}).length} to delete.**`;
-  if (plan.createdResources) {
-    body += "\n\n### \u2728 Create";
-    body += renderResources(plan.createdResources);
-  }
-  if (plan.updatedResources) {
-    body += "\n\n### \u267B\uFE0F Update";
-    body += renderResources(plan.updatedResources);
-  }
-  if (plan.recreatedResources) {
-    body += "\n\n### \u2699\uFE0F Re-Create";
-    body += renderResources(plan.recreatedResources);
-  }
-  if (plan.deletedResources) {
-    body += "\n\n### \u{1F5D1}\uFE0F Delete";
-    body += renderResources(plan.deletedResources);
-  }
-  return body;
-}
-function renderComment({
-  plan,
-  header,
-  includeFooter
-}) {
-  const body = renderBody(plan);
-  let footer = "";
-  if (includeFooter === void 0 || includeFooter === true) {
-    footer = `
-
----
-
-_Triggered by @${github.context.actor}, Commit: \`${github.context.payload.pull_request.head.sha}\`_`;
-  }
-  return `## ${header}
-
-${body}${footer}`;
-}
-async function createOrUpdateComment({
-  octokit,
-  content
-}) {
-  const comments = await octokit.rest.issues.listComments({
-    owner: github.context.repo.owner,
-    repo: github.context.repo.repo,
-    issue_number: github.context.issue.number
-  });
-  const header = content.split("\n")[0];
-  for (const comment of comments.data) {
-    if (comment.body?.startsWith(header)) {
-      await octokit.rest.issues.updateComment({
-        owner: github.context.repo.owner,
-        repo: github.context.repo.repo,
-        comment_id: comment.id,
-        body: content
-      });
-      return;
-    }
-  }
-  await octokit.rest.issues.createComment({
-    owner: github.context.repo.owner,
-    repo: github.context.repo.repo,
-    issue_number: github.context.issue.number,
-    body: content
-  });
-}
 
 // src/render.ts
 var exec = __toESM(require_exec());
@@ -30581,6 +30498,9 @@ function parsePlanfileJSON(json) {
 }
 
 // src/render.ts
+function planIsEmpty(plan) {
+  return !plan.createdResources && !plan.recreatedResources && !plan.updatedResources && !plan.deletedResources;
+}
 function extractResourceContent(name, humanReadablePlan) {
   const lines = humanReadablePlan.split("\n");
   const resourceHeaderIndex = lines.findIndex((line) => line.startsWith(`  # ${name}`));
@@ -30669,6 +30589,91 @@ async function renderPlan({
   return internalRenderPlan(structuredPlanfile, humanReadablePlanfile);
 }
 
+// src/comment.ts
+function renderResources(resources) {
+  let result = "";
+  for (const key of Object.keys(resources).sort()) {
+    const content = resources[key];
+    result += `
+
+<details><summary><code>${key}</code></summary>
+
+${content}
+
+</details>`;
+  }
+  return result;
+}
+function renderBody(plan) {
+  if (planIsEmpty(plan)) {
+    return "**\u2192 No Resource Changes!**";
+  }
+  let body = `**\u2192 Resource Changes: ${Object.keys(plan.createdResources ?? {}).length} to create, ${Object.keys(plan.updatedResources ?? {}).length} to update, ${Object.keys(plan.recreatedResources ?? {}).length} to re-create, ${Object.keys(plan.deletedResources ?? {}).length} to delete.**`;
+  if (plan.createdResources) {
+    body += "\n\n### \u2728 Create";
+    body += renderResources(plan.createdResources);
+  }
+  if (plan.updatedResources) {
+    body += "\n\n### \u267B\uFE0F Update";
+    body += renderResources(plan.updatedResources);
+  }
+  if (plan.recreatedResources) {
+    body += "\n\n### \u2699\uFE0F Re-Create";
+    body += renderResources(plan.recreatedResources);
+  }
+  if (plan.deletedResources) {
+    body += "\n\n### \u{1F5D1}\uFE0F Delete";
+    body += renderResources(plan.deletedResources);
+  }
+  return body;
+}
+function renderComment({
+  plan,
+  header,
+  includeFooter
+}) {
+  const body = renderBody(plan);
+  let footer = "";
+  if (includeFooter === void 0 || includeFooter === true) {
+    footer = `
+
+---
+
+_Triggered by @${github.context.actor}, Commit: \`${github.context.payload.pull_request.head.sha}\`_`;
+  }
+  return `## ${header}
+
+${body}${footer}`;
+}
+async function createOrUpdateComment({
+  octokit,
+  content
+}) {
+  const comments = await octokit.rest.issues.listComments({
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    issue_number: github.context.issue.number
+  });
+  const header = content.split("\n")[0];
+  for (const comment of comments.data) {
+    if (comment.body?.startsWith(header)) {
+      await octokit.rest.issues.updateComment({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        comment_id: comment.id,
+        body: content
+      });
+      return;
+    }
+  }
+  await octokit.rest.issues.createComment({
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    issue_number: github.context.issue.number,
+    body: content
+  });
+}
+
 // src/index.ts
 async function run() {
   const inputs = {
@@ -30676,7 +30681,8 @@ async function run() {
     planfile: core.getInput("planfile", { required: true }),
     terraformCmd: core.getInput("terraform-cmd", { required: true }),
     workingDirectory: core.getInput("working-directory", { required: true }),
-    header: core.getInput("header", { required: true })
+    header: core.getInput("header", { required: true }),
+    skipEmpty: core.getBooleanInput("skip-empty", { required: true })
   };
   const octokit = github2.getOctokit(inputs.token);
   const plan = await core.group(
@@ -30687,10 +30693,12 @@ async function run() {
       workingDirectory: inputs.workingDirectory
     })
   );
-  await core.group("Render comment", () => {
-    const comment = renderComment({ plan, header: inputs.header });
-    return createOrUpdateComment({ octokit, content: comment });
-  });
+  if (!inputs.skipEmpty || !planIsEmpty(plan)) {
+    await core.group("Render comment", () => {
+      const comment = renderComment({ plan, header: inputs.header });
+      return createOrUpdateComment({ octokit, content: comment });
+    });
+  }
 }
 async function main() {
   try {

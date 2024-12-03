@@ -9,6 +9,15 @@ export type RenderedPlan = {
   deletedResources?: Record<string, string>
 }
 
+export function planIsEmpty(plan: RenderedPlan): boolean {
+  return (
+    !plan.createdResources &&
+    !plan.recreatedResources &&
+    !plan.updatedResources &&
+    !plan.deletedResources
+  )
+}
+
 type ResourceContent = {
   reason?: string
   lines: string[]

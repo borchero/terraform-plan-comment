@@ -27,6 +27,9 @@ inputs:
     description: Whether to skip posting a pull request comment when no changes need to be performed.
     required: true
     default: "false"
+outputs:
+  plan-markdown:
+    description: The raw markdown output of the terraform plan
 runs:
   using: node20
   main: dist/index.js

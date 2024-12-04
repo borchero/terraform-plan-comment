@@ -1,4 +1,3 @@
-import * as core from '@actions/core'
 import type { GitHub } from '@actions/github/lib/utils'
 import * as github from '@actions/github'
 import type { PullRequestEvent } from '@octokit/webhooks-types'

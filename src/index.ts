@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { createOrUpdateComment, renderComment } from './comment'
-import { planIsEmpty, renderPlan } from './render'
+import { createOrUpdateComment, renderBody, renderComment } from './comment'
+import { renderPlan } from './render'
 
 async function run() {
   // 1) Setup
@@ -11,7 +11,7 @@ async function run() {
     terraformCmd: core.getInput('terraform-cmd', { required: true }),
     workingDirectory: core.getInput('working-directory', { required: true }),
     header: core.getInput('header', { required: true }),
-    skipEmpty: core.getBooleanInput('skip-empty', { required: true })
+    shouldComment: core.getInput('should-comment', { required: false })
   }
   const octokit = github.getOctokit(inputs.token)
 
@@ -24,10 +24,18 @@ async function run() {
     })
   )
 
-  // 3) Post comment
-  if (!inputs.skipEmpty || !planIsEmpty(plan)) {
+  // 3) Render the plan diff markdown and set it as output
+  const planMarkdown = await core.group('Rendering plan diff markdown', () => {
+    const markdown = renderBody(plan)
+    core.debug(`Outputting plan as markdown: ${markdown}`)
+    core.setOutput('plan-markdown', markdown)
+    return Promise.resolve(markdown)
+  })
+
+  // 4) Post comment with markdown (if applicable)
+  if (inputs.shouldComment === 'true') {
     await core.group('Render comment', () => {
-      const comment = renderComment({ plan, header: inputs.header })
+      const comment = renderComment({ body: planMarkdown, header: inputs.header })
       return createOrUpdateComment({ octokit, content: comment })
     })
   }

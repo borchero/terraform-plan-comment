@@ -12,7 +12,7 @@ function renderResources(resources: Record<string, string>): string {
   return result
 }
 
-function renderBody(plan: RenderedPlan): string {
+export function renderBody(plan: RenderedPlan): string {
   if (planIsEmpty(plan)) {
     return '**→ No Resource Changes!**'
   }
@@ -45,18 +45,14 @@ function renderBody(plan: RenderedPlan): string {
 }
 
 export function renderComment({
-  plan,
+  body,
   header,
   includeFooter
 }: {
-  plan: RenderedPlan
+  body: string
   header: string
   includeFooter?: boolean
 }): string {
-  // Build body
-  const body = renderBody(plan)
-
-  // Build footer
   let footer = ''
   if (includeFooter === undefined || includeFooter === true) {
     footer =

@@ -19747,7 +19747,7 @@ var require_core = __commonJS({
       return inputs.map((input) => input.trim());
     }
     exports2.getMultilineInput = getMultilineInput;
-    function getBooleanInput(name, options) {
+    function getBooleanInput2(name, options) {
       const trueValue = ["true", "True", "TRUE"];
       const falseValue = ["false", "False", "FALSE"];
       const val = getInput2(name, options);
@@ -19758,7 +19758,7 @@ var require_core = __commonJS({
       throw new TypeError(`Input does not meet YAML 1.2 "Core Schema" specification: ${name}
 Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
     }
-    exports2.getBooleanInput = getBooleanInput;
+    exports2.getBooleanInput = getBooleanInput2;
     function setOutput2(name, value) {
       const filePath = process.env["GITHUB_OUTPUT"] || "";
       if (filePath) {
@@ -26539,10 +26539,11 @@ var require_semver2 = __commonJS({
 });
 
 // src/index.ts
-var core = __toESM(require_core());
+var core2 = __toESM(require_core());
 var github2 = __toESM(require_github());
 
 // src/comment.ts
+var core = __toESM(require_core());
 var github = __toESM(require_github());
 
 // src/render.ts
@@ -30627,11 +30628,12 @@ function renderBody(plan) {
   }
   return body;
 }
-function renderComment({
-  body,
+function renderMarkdown({
+  plan,
   header,
   includeFooter
 }) {
+  const body = renderBody(plan);
   let footer = "";
   if (includeFooter === void 0 || includeFooter === true) {
     footer = `
@@ -30640,6 +30642,7 @@ function renderComment({
 
 _Triggered by @${github.context.actor}, Commit: \`${github.context.payload.pull_request.head.sha}\`_`;
   }
+  core.debug(`footer: ${footer}`);
   return `## ${header}
 
 ${body}${footer}`;
@@ -30676,15 +30679,16 @@ async function createOrUpdateComment({
 // src/index.ts
 async function run() {
   const inputs = {
-    token: core.getInput("token", { required: true }),
-    planfile: core.getInput("planfile", { required: true }),
-    terraformCmd: core.getInput("terraform-cmd", { required: true }),
-    workingDirectory: core.getInput("working-directory", { required: true }),
-    header: core.getInput("header", { required: true }),
-    shouldComment: core.getInput("comment", { required: false })
+    token: core2.getInput("token", { required: true }),
+    planfile: core2.getInput("planfile", { required: true }),
+    terraformCmd: core2.getInput("terraform-cmd", { required: true }),
+    workingDirectory: core2.getInput("working-directory", { required: true }),
+    header: core2.getInput("header", { required: true }),
+    skipEmpty: core2.getBooleanInput("skip-empty", { required: true }),
+    shouldComment: core2.getInput("should-comment", { required: false })
   };
   const octokit = github2.getOctokit(inputs.token);
-  const plan = await core.group(
+  const plan = await core2.group(
     "Render plan",
     () => renderPlan({
       planfile: inputs.planfile,
@@ -30692,16 +30696,19 @@ async function run() {
       workingDirectory: inputs.workingDirectory
     })
   );
-  const planMarkdown = await core.group("Rendering plan diff markdown", () => {
-    const markdown = renderBody(plan);
-    core.debug(`Outputting plan as markdown: ${markdown}`);
-    core.setOutput("plan-markdown", markdown);
-    return Promise.resolve(markdown);
-  });
-  if (inputs.shouldComment === "true") {
-    await core.group("Render comment", () => {
-      const comment = renderComment({ body: planMarkdown, header: inputs.header });
-      return createOrUpdateComment({ octokit, content: comment });
+  if (!inputs.skipEmpty || !planIsEmpty(plan)) {
+    const planMarkdown = await core2.group("Render plan diff markdown", () => {
+      const markdown = renderMarkdown({ plan, header: inputs.header });
+      core2.setOutput("plan-markdown", markdown);
+      return Promise.resolve(markdown);
+    });
+    if (inputs.shouldComment === "true") {
+      await core2.group("Render comment", () => {
+        return createOrUpdateComment({ octokit, content: planMarkdown });
+      });
+    }
+    await core2.group("Adding plan to step summary", async () => {
+      await core2.summary.addRaw(planMarkdown).write();
     });
   }
 }
@@ -30710,7 +30717,7 @@ async function main() {
     await run();
   } catch (error) {
     if (error instanceof Error) {
-      core.setFailed(error.message);
+      core2.setFailed(error.message);
     }
   }
 }

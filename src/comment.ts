@@ -1,3 +1,4 @@
+import * as core from '@actions/core'
 import type { GitHub } from '@actions/github/lib/utils'
 import * as github from '@actions/github'
 import type { PullRequestEvent } from '@octokit/webhooks-types'
@@ -12,7 +13,7 @@ function renderResources(resources: Record<string, string>): string {
   return result
 }
 
-export function renderBody(plan: RenderedPlan): string {
+function renderBody(plan: RenderedPlan): string {
   if (planIsEmpty(plan)) {
     return '**→ No Resource Changes!**'
   }
@@ -44,21 +45,27 @@ export function renderBody(plan: RenderedPlan): string {
   return body
 }
 
-export function renderComment({
-  body,
+export function renderMarkdown({
+  plan,
   header,
   includeFooter
 }: {
-  body: string
+  plan: RenderedPlan
   header: string
   includeFooter?: boolean
 }): string {
+  // Build body
+  const body = renderBody(plan)
+
+  // Build footer
   let footer = ''
   if (includeFooter === undefined || includeFooter === true) {
     footer =
       `\n\n---\n\n_Triggered by @${github.context.actor},` +
       ` Commit: \`${(github.context.payload as PullRequestEvent).pull_request.head.sha}\`_`
   }
+
+  core.debug(`footer: ${footer}`)
 
   return `## ${header}\n\n${body}${footer}`
 }

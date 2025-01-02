@@ -76,3 +76,9 @@ The directory where the Terraform binary ought to be called. Defaults to `$GITHU
 
 The header that is used for the pull request comment posted by this action. Changing the default allows to distinguish
 multiple Terraform runs: each sticky pull request comment is identified by its header.
+
+## Outputs
+
+This action provides the following output:
+
+- `markdown`: The raw markdown output of the terraform plan

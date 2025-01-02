@@ -44,7 +44,7 @@ function renderBody(plan: RenderedPlan): string {
   return body
 }
 
-export function renderComment({
+export function renderMarkdown({
   plan,
   header,
   includeFooter
@@ -59,9 +59,11 @@ export function renderComment({
   // Build footer
   let footer = ''
   if (includeFooter === undefined || includeFooter === true) {
-    footer =
-      `\n\n---\n\n_Triggered by @${github.context.actor},` +
-      ` Commit: \`${(github.context.payload as PullRequestEvent).pull_request.head.sha}\`_`
+    let commitInfo = ''
+    if ('pull_request' in github.context.payload) {
+      commitInfo = `, Commit: \`${(github.context.payload as PullRequestEvent).pull_request.head.sha}\``
+    }
+    footer = `\n\n---\n\n_Triggered by @${github.context.actor}${commitInfo}_`
   }
 
   return `## ${header}\n\n${body}${footer}`

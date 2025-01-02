@@ -30697,21 +30697,21 @@ async function run() {
       workingDirectory: inputs.workingDirectory
     })
   );
+  const planMarkdown = await core.group("Render plan diff markdown", () => {
+    const markdown = renderMarkdown({ plan, header: inputs.header });
+    core.setOutput("markdown", markdown);
+    return Promise.resolve(markdown);
+  });
+  await core.group("Adding plan to step summary", async () => {
+    await core.summary.addRaw(planMarkdown).write();
+  });
   if (!inputs.skipEmpty || !planIsEmpty(plan)) {
-    const prContext = "pull_request" in github2.context.payload;
-    const planMarkdown = await core.group("Render plan diff markdown", () => {
-      const markdown = renderMarkdown({ plan, header: inputs.header });
-      core.setOutput("plan-markdown", markdown);
-      return Promise.resolve(markdown);
-    });
+    const prContext = github2.context.eventName === "pull_request";
     if (prContext === true) {
       await core.group("Render comment", () => {
         return createOrUpdateComment({ octokit, content: planMarkdown });
       });
     }
-    await core.group("Adding plan to step summary", async () => {
-      await core.summary.addRaw(planMarkdown).write();
-    });
   }
 }
 async function main() {

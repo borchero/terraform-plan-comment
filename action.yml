@@ -28,7 +28,7 @@ inputs:
     required: true
     default: "false"
 outputs:
-  plan-markdown:
+  markdown:
     description: The raw markdown output of the terraform plan
 runs:
   using: node20

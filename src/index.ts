@@ -25,10 +25,10 @@ async function run() {
   )
 
   // 3) Render the plan diff markdown and set it as output
-  const planMarkdown = await core.group('Render plan diff markdown', () => {
+  const planMarkdown = await core.group('Render plan diff markdown', async () => {
     const markdown = renderMarkdown({ plan, header: inputs.header })
     core.setOutput('markdown', markdown)
-    return Promise.resolve(markdown)
+    return markdown
   })
 
   // 4) Add plan to GitHub step summary
@@ -36,14 +36,11 @@ async function run() {
     await core.summary.addRaw(planMarkdown).write()
   })
 
-  if (!inputs.skipEmpty || !planIsEmpty(plan)) {
+  if ((!inputs.skipEmpty || !planIsEmpty(plan)) && github.context.eventName === 'pull_request') {
     // 5) Post comment with markdown (if applicable)
-    const prContext = github.context.eventName === 'pull_request'
-    if (prContext === true) {
-      await core.group('Render comment', () => {
-        return createOrUpdateComment({ octokit, content: planMarkdown })
-      })
-    }
+    await core.group('Render comment', () => {
+      return createOrUpdateComment({ octokit, content: planMarkdown })
+    })
   }
 }
 

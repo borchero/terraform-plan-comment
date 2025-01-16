@@ -30635,15 +30635,14 @@ function renderMarkdown({
   const body = renderBody(plan);
   let footer = "";
   if (includeFooter === void 0 || includeFooter === true) {
-    let commitInfo = "";
-    if ("pull_request" in github.context.payload) {
-      commitInfo = `, Commit: \`${github.context.payload.pull_request.head.sha}\``;
-    }
     footer = `
 
 ---
 
-_Triggered by @${github.context.actor}${commitInfo}_`;
+_Triggered by @${github.context.actor}`;
+    if (github.context.eventName === "pull_request") {
+      footer += `, Commit: \`${github.context.payload.pull_request.head.sha}\`_`;
+    }
   }
   return `## ${header}
 
@@ -30697,21 +30696,18 @@ async function run() {
       workingDirectory: inputs.workingDirectory
     })
   );
-  const planMarkdown = await core.group("Render plan diff markdown", () => {
+  const planMarkdown = await core.group("Render plan diff markdown", async () => {
     const markdown = renderMarkdown({ plan, header: inputs.header });
     core.setOutput("markdown", markdown);
-    return Promise.resolve(markdown);
+    return markdown;
   });
   await core.group("Adding plan to step summary", async () => {
     await core.summary.addRaw(planMarkdown).write();
   });
-  if (!inputs.skipEmpty || !planIsEmpty(plan)) {
-    const prContext = github2.context.eventName === "pull_request";
-    if (prContext === true) {
-      await core.group("Render comment", () => {
-        return createOrUpdateComment({ octokit, content: planMarkdown });
-      });
-    }
+  if ((!inputs.skipEmpty || !planIsEmpty(plan)) && github2.context.eventName === "pull_request") {
+    await core.group("Render comment", () => {
+      return createOrUpdateComment({ octokit, content: planMarkdown });
+    });
   }
 }
 async function main() {

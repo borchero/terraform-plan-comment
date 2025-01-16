@@ -30685,7 +30685,8 @@ async function run() {
     terraformCmd: core.getInput("terraform-cmd", { required: true }),
     workingDirectory: core.getInput("working-directory", { required: true }),
     header: core.getInput("header", { required: true }),
-    skipEmpty: core.getBooleanInput("skip-empty", { required: true })
+    skipEmpty: core.getBooleanInput("skip-empty", { required: true }),
+    skipComment: core.getBooleanInput("skip-comment", { required: true })
   };
   const octokit = github2.getOctokit(inputs.token);
   const plan = await core.group(
@@ -30704,7 +30705,7 @@ async function run() {
   await core.group("Adding plan to step summary", async () => {
     await core.summary.addRaw(planMarkdown).write();
   });
-  if ((!inputs.skipEmpty || !planIsEmpty(plan)) && github2.context.eventName === "pull_request") {
+  if (!inputs.skipComment && (!inputs.skipEmpty || !planIsEmpty(plan)) && github2.context.eventName === "pull_request") {
     await core.group("Render comment", () => {
       return createOrUpdateComment({ octokit, content: planMarkdown });
     });

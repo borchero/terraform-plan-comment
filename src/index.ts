@@ -11,7 +11,8 @@ async function run() {
     terraformCmd: core.getInput('terraform-cmd', { required: true }),
     workingDirectory: core.getInput('working-directory', { required: true }),
     header: core.getInput('header', { required: true }),
-    skipEmpty: core.getBooleanInput('skip-empty', { required: true })
+    skipEmpty: core.getBooleanInput('skip-empty', { required: true }),
+    skipComment: core.getBooleanInput('skip-comment', { required: true })
   }
   const octokit = github.getOctokit(inputs.token)
 
@@ -36,7 +37,11 @@ async function run() {
     await core.summary.addRaw(planMarkdown).write()
   })
 
-  if ((!inputs.skipEmpty || !planIsEmpty(plan)) && github.context.eventName === 'pull_request') {
+  if (
+    !inputs.skipComment &&
+    (!inputs.skipEmpty || !planIsEmpty(plan)) &&
+    github.context.eventName === 'pull_request'
+  ) {
     // 5) Post comment with markdown (if applicable)
     await core.group('Render comment', () => {
       return createOrUpdateComment({ octokit, content: planMarkdown })

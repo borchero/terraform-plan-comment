@@ -27,6 +27,10 @@ inputs:
     description: Whether to skip posting a pull request comment when no changes need to be performed.
     required: true
     default: "false"
+  skip-comment:
+    description: Whether to skip posting a pull request comment entirely.
+    required: true
+    default: "false"
 outputs:
   markdown:
     description: The raw markdown output of the terraform plan

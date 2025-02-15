@@ -1,0 +1,37 @@
+name: Stale
+on:
+  schedule:
+    - cron: "0 6 * * *" # every day in the morning
+  workflow_dispatch:
+
+permissions:
+  contents: write # for branch deletion
+  pull-requests: write
+  issues: write
+
+jobs:
+  stalebot:
+    name: Run Stalebot
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run stale action
+        uses: actions/stale@v9
+        with:
+          days-before-stale: 60
+          days-before-close: 90
+          stale-pr-label: stale
+          stale-issue-label: stale
+          remove-stale-when-updated: true
+          delete-branch: false
+          stale-pr-message: |
+            ### 🤖 Stalebot
+
+            **This pull request hasn't seen updates in the last 60 days.**
+
+            If it is not relevant anymore, please consider closing the pull request. Otherwise, it will be closed automatically in 30 days.
+          stale-issue-message: |
+            ### 🤖 Stalebot
+
+            **This issue hasn't seen updates in the last 60 days.**
+
+            If it has been resolved or won't be worked on, please consider closing the issue. Otherwise, it will be closed automatically in 30 days.

@@ -44,7 +44,30 @@ GitHub Action to post the output of `terraform plan` to a pull request comment.
 
 ## Parameters
 
-This action provides a few input parameters that allow for customization:
+```yaml
+- uses: borchero/terraform-plan-comment@v2
+  with:
+    # GitHub token for API access (Required)
+    token: ""
+
+    # Path to the Terraform plan file (Required)
+    planfile: ""
+
+    # Command to execute the Terraform binary
+    terraform-cmd: terraform
+
+    # Directory where Terraform should be called
+    working-directory: "."
+
+    # Header for the PR comment
+    header: 📝 Terraform Plan
+
+    # Skip comments for empty plans
+    skip-empty: false
+
+    # Skip PR comment creation entirely. When enabled, the plan will still be available in the step summary
+    skip-comment: false
+```
 
 ### `token` (required)
 
@@ -76,3 +99,18 @@ The directory where the Terraform binary ought to be called. Defaults to `$GITHU
 
 The header that is used for the pull request comment posted by this action. Changing the default allows to distinguish
 multiple Terraform runs: each sticky pull request comment is identified by its header.
+
+### `skip-empty`
+
+Whether to skip posting a pull request comment when no changes need to be performed. Defaults to `false`.
+
+### `skip-comment`
+
+Whether to skip posting a pull request comment entirely. When enabled, the plan will still be available in the step
+summary.
+
+## Outputs
+
+This action provides the following output:
+
+- `markdown`: The raw markdown output of the terraform plan

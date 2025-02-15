@@ -36,3 +36,4 @@ jobs:
           token: ${{ github.token }}
           planfile: .planfile
           working-directory: tests/ci/1-change
+          skip-comment: ${{ github.event.pull_request.head.repo.full_name != 'borchero/terraform-plan-comment' }}

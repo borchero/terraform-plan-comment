@@ -235,3 +235,4 @@ terraform.rc
 # End of https://www.toptal.com/developers/gitignore/api/node,macos,terraform,visualstudiocode
 
 !dist/index.js
+tests/fixtures/basic/test2.txt

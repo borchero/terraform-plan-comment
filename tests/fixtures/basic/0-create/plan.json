@@ -29,6 +29,26 @@
             "content": true,
             "sensitive_content": true
           }
+        },
+        {
+          "address": "local_file.test2",
+          "mode": "managed",
+          "type": "local_file",
+          "name": "test2",
+          "provider_name": "registry.terraform.io/hashicorp/local",
+          "schema_version": 0,
+          "values": {
+            "content": "foobar",
+            "content_base64": null,
+            "directory_permission": "0777",
+            "file_permission": "0777",
+            "filename": "../test2.txt",
+            "sensitive_content": null,
+            "source": null
+          },
+          "sensitive_values": {
+            "sensitive_content": true
+          }
         }
       ]
     }
@@ -69,6 +89,41 @@
           "sensitive_content": true
         }
       }
+    },
+    {
+      "address": "local_file.test2",
+      "mode": "managed",
+      "type": "local_file",
+      "name": "test2",
+      "provider_name": "registry.terraform.io/hashicorp/local",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "content": "foobar",
+          "content_base64": null,
+          "directory_permission": "0777",
+          "file_permission": "0777",
+          "filename": "../test2.txt",
+          "sensitive_content": null,
+          "source": null
+        },
+        "after_unknown": {
+          "content_base64sha256": true,
+          "content_base64sha512": true,
+          "content_md5": true,
+          "content_sha1": true,
+          "content_sha256": true,
+          "content_sha512": true,
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {
+          "sensitive_content": true
+        }
+      }
     }
   ],
   "configuration": {
@@ -94,6 +149,22 @@
             },
             "filename": {
               "constant_value": "../test.txt"
+            }
+          },
+          "schema_version": 0
+        },
+        {
+          "address": "local_file.test2",
+          "mode": "managed",
+          "type": "local_file",
+          "name": "test2",
+          "provider_config_key": "local",
+          "expressions": {
+            "content": {
+              "constant_value": "foobar"
+            },
+            "filename": {
+              "constant_value": "../test2.txt"
             }
           },
           "schema_version": 0

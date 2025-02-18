@@ -15,3 +15,8 @@ resource "local_file" "test" {
   filename = "../test.txt"
   content  = "foo-${var.test}"
 }
+
+resource "local_file" "test2" {
+  filename = "../test2.txt"
+  content  = "foobar"
+}

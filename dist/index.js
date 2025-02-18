@@ -30630,7 +30630,9 @@ var planfileSchema = z.object({
           z.tuple([z.literal("delete")]),
           z.tuple([z.literal("update")]),
           z.tuple([z.literal("delete"), z.literal("create")]),
-          z.tuple([z.literal("create"), z.literal("delete")])
+          z.tuple([z.literal("create"), z.literal("delete")]),
+          z.tuple([z.literal("forget")]),
+          z.tuple([z.literal("create"), z.literal("forget")])
         ])
       })
     })

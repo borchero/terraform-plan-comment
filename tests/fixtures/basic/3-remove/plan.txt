@@ -1,0 +1,14 @@
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+
+Terraform will perform the following actions:
+
+ # local_file.test2 will no longer be managed by Terraform, but will not be destroyed
+ # (destroy = false is set in the configuration)
+ . resource "local_file" "test2" {
+        id                   = "8843d7f92416211de9ebb963ff4ce28125932878"
+        # (10 unchanged attributes hidden)
+    }
+
+Plan: 0 to add, 0 to change, 0 to destroy.

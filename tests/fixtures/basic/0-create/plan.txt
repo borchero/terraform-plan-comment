@@ -20,4 +20,19 @@ Terraform will perform the following actions:
       + id                   = (known after apply)
     }
 
-Plan: 1 to add, 0 to change, 0 to destroy.
+  # local_file.test2 will be created
+  + resource "local_file" "test2" {
+      + content              = "foobar"
+      + content_base64sha256 = (known after apply)
+      + content_base64sha512 = (known after apply)
+      + content_md5          = (known after apply)
+      + content_sha1         = (known after apply)
+      + content_sha256       = (known after apply)
+      + content_sha512       = (known after apply)
+      + directory_permission = "0777"
+      + file_permission      = "0777"
+      + filename             = "../test2.txt"
+      + id                   = (known after apply)
+    }
+
+Plan: 2 to add, 0 to change, 0 to destroy.

@@ -59,7 +59,7 @@ export function renderMarkdown({
   // Build footer
   let footer = ''
   if (includeFooter === undefined || includeFooter === true) {
-    footer = `\n\n---\n\nTriggered by @${github.context.actor}`
+    footer = `\n\n---\n\n_Triggered by @${github.context.actor}_`
     if (github.context.eventName === 'pull_request') {
       footer += `, Commit: \`${(github.context.payload as PullRequestEvent).pull_request.head.sha}\`_`
     }

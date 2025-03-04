@@ -114,3 +114,4 @@ summary.
 This action provides the following output:
 
 - `markdown`: The raw markdown output of the terraform plan
+- `empty`: Whether the terraform plan contains any change or not

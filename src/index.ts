@@ -29,6 +29,7 @@ async function run() {
   const planMarkdown = await core.group('Render plan diff markdown', async () => {
     const markdown = renderMarkdown({ plan, header: inputs.header })
     core.setOutput('markdown', markdown)
+    core.setOutput('empty', planIsEmpty(plan))
     return markdown
   })
 

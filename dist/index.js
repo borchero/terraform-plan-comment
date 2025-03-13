@@ -24645,9 +24645,9 @@ var require_github = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/internal/constants.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/internal/constants.js
 var require_constants6 = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/internal/constants.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/internal/constants.js"(exports2, module2) {
     "use strict";
     var SEMVER_SPEC_VERSION = "2.0.0";
     var MAX_LENGTH = 256;
@@ -24677,9 +24677,9 @@ var require_constants6 = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/internal/debug.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/internal/debug.js
 var require_debug = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/internal/debug.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/internal/debug.js"(exports2, module2) {
     "use strict";
     var debug = typeof process === "object" && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG) ? (...args) => console.error("SEMVER", ...args) : () => {
     };
@@ -24687,9 +24687,9 @@ var require_debug = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/internal/re.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/internal/re.js
 var require_re = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/internal/re.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/internal/re.js"(exports2, module2) {
     "use strict";
     var {
       MAX_SAFE_COMPONENT_LENGTH,
@@ -24701,6 +24701,7 @@ var require_re = __commonJS({
     var re = exports2.re = [];
     var safeRe = exports2.safeRe = [];
     var src = exports2.src = [];
+    var safeSrc = exports2.safeSrc = [];
     var t = exports2.t = {};
     var R = 0;
     var LETTERDASHNUMBER = "[a-zA-Z0-9-]";
@@ -24721,6 +24722,7 @@ var require_re = __commonJS({
       debug(name, index, value);
       t[name] = index;
       src[index] = value;
+      safeSrc[index] = safe;
       re[index] = new RegExp(value, isGlobal ? "g" : void 0);
       safeRe[index] = new RegExp(safe, isGlobal ? "g" : void 0);
     };
@@ -24773,9 +24775,9 @@ var require_re = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/internal/parse-options.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/internal/parse-options.js
 var require_parse_options = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/internal/parse-options.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/internal/parse-options.js"(exports2, module2) {
     "use strict";
     var looseOption = Object.freeze({ loose: true });
     var emptyOpts = Object.freeze({});
@@ -24792,9 +24794,9 @@ var require_parse_options = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/internal/identifiers.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/internal/identifiers.js
 var require_identifiers = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/internal/identifiers.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/internal/identifiers.js"(exports2, module2) {
     "use strict";
     var numeric = /^[0-9]+$/;
     var compareIdentifiers = (a, b) => {
@@ -24814,13 +24816,13 @@ var require_identifiers = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/classes/semver.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/classes/semver.js
 var require_semver = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/classes/semver.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/classes/semver.js"(exports2, module2) {
     "use strict";
     var debug = require_debug();
     var { MAX_LENGTH, MAX_SAFE_INTEGER } = require_constants6();
-    var { safeRe: re, t } = require_re();
+    var { safeRe: re, safeSrc: src, t } = require_re();
     var parseOptions = require_parse_options();
     var { compareIdentifiers } = require_identifiers();
     var SemVer = class _SemVer {
@@ -24965,7 +24967,8 @@ var require_semver = __commonJS({
             throw new Error("invalid increment argument: identifier is empty");
           }
           if (identifier) {
-            const match = `-${identifier}`.match(this.options.loose ? re[t.PRERELEASELOOSE] : re[t.PRERELEASE]);
+            const r = new RegExp(`^${this.options.loose ? src[t.PRERELEASELOOSE] : src[t.PRERELEASE]}$`);
+            const match = `-${identifier}`.match(r);
             if (!match || match[1] !== identifier) {
               throw new Error(`invalid identifier: ${identifier}`);
             }
@@ -25075,9 +25078,9 @@ var require_semver = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/parse.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/parse.js
 var require_parse2 = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/parse.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/parse.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var parse2 = (version, options, throwErrors = false) => {
@@ -25097,9 +25100,9 @@ var require_parse2 = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/valid.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/valid.js
 var require_valid = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/valid.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/valid.js"(exports2, module2) {
     "use strict";
     var parse2 = require_parse2();
     var valid = (version, options) => {
@@ -25110,9 +25113,9 @@ var require_valid = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/clean.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/clean.js
 var require_clean = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/clean.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/clean.js"(exports2, module2) {
     "use strict";
     var parse2 = require_parse2();
     var clean = (version, options) => {
@@ -25123,9 +25126,9 @@ var require_clean = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/inc.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/inc.js
 var require_inc = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/inc.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/inc.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var inc = (version, release, options, identifier, identifierBase) => {
@@ -25147,9 +25150,9 @@ var require_inc = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/diff.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/diff.js
 var require_diff = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/diff.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/diff.js"(exports2, module2) {
     "use strict";
     var parse2 = require_parse2();
     var diff = (version1, version2) => {
@@ -25191,9 +25194,9 @@ var require_diff = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/major.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/major.js
 var require_major = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/major.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/major.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var major = (a, loose) => new SemVer(a, loose).major;
@@ -25201,9 +25204,9 @@ var require_major = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/minor.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/minor.js
 var require_minor = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/minor.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/minor.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var minor = (a, loose) => new SemVer(a, loose).minor;
@@ -25211,9 +25214,9 @@ var require_minor = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/patch.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/patch.js
 var require_patch = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/patch.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/patch.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var patch = (a, loose) => new SemVer(a, loose).patch;
@@ -25221,9 +25224,9 @@ var require_patch = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/prerelease.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/prerelease.js
 var require_prerelease = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/prerelease.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/prerelease.js"(exports2, module2) {
     "use strict";
     var parse2 = require_parse2();
     var prerelease = (version, options) => {
@@ -25234,9 +25237,9 @@ var require_prerelease = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/compare.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/compare.js
 var require_compare = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/compare.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/compare.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var compare = (a, b, loose) => new SemVer(a, loose).compare(new SemVer(b, loose));
@@ -25244,9 +25247,9 @@ var require_compare = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/rcompare.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/rcompare.js
 var require_rcompare = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/rcompare.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/rcompare.js"(exports2, module2) {
     "use strict";
     var compare = require_compare();
     var rcompare = (a, b, loose) => compare(b, a, loose);
@@ -25254,9 +25257,9 @@ var require_rcompare = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/compare-loose.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/compare-loose.js
 var require_compare_loose = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/compare-loose.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/compare-loose.js"(exports2, module2) {
     "use strict";
     var compare = require_compare();
     var compareLoose = (a, b) => compare(a, b, true);
@@ -25264,9 +25267,9 @@ var require_compare_loose = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/compare-build.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/compare-build.js
 var require_compare_build = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/compare-build.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/compare-build.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var compareBuild = (a, b, loose) => {
@@ -25278,9 +25281,9 @@ var require_compare_build = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/sort.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/sort.js
 var require_sort = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/sort.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/sort.js"(exports2, module2) {
     "use strict";
     var compareBuild = require_compare_build();
     var sort = (list, loose) => list.sort((a, b) => compareBuild(a, b, loose));
@@ -25288,9 +25291,9 @@ var require_sort = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/rsort.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/rsort.js
 var require_rsort = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/rsort.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/rsort.js"(exports2, module2) {
     "use strict";
     var compareBuild = require_compare_build();
     var rsort = (list, loose) => list.sort((a, b) => compareBuild(b, a, loose));
@@ -25298,9 +25301,9 @@ var require_rsort = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/gt.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/gt.js
 var require_gt = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/gt.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/gt.js"(exports2, module2) {
     "use strict";
     var compare = require_compare();
     var gt = (a, b, loose) => compare(a, b, loose) > 0;
@@ -25308,9 +25311,9 @@ var require_gt = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/lt.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/lt.js
 var require_lt = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/lt.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/lt.js"(exports2, module2) {
     "use strict";
     var compare = require_compare();
     var lt = (a, b, loose) => compare(a, b, loose) < 0;
@@ -25318,9 +25321,9 @@ var require_lt = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/eq.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/eq.js
 var require_eq = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/eq.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/eq.js"(exports2, module2) {
     "use strict";
     var compare = require_compare();
     var eq = (a, b, loose) => compare(a, b, loose) === 0;
@@ -25328,9 +25331,9 @@ var require_eq = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/neq.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/neq.js
 var require_neq = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/neq.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/neq.js"(exports2, module2) {
     "use strict";
     var compare = require_compare();
     var neq = (a, b, loose) => compare(a, b, loose) !== 0;
@@ -25338,9 +25341,9 @@ var require_neq = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/gte.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/gte.js
 var require_gte = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/gte.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/gte.js"(exports2, module2) {
     "use strict";
     var compare = require_compare();
     var gte = (a, b, loose) => compare(a, b, loose) >= 0;
@@ -25348,9 +25351,9 @@ var require_gte = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/lte.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/lte.js
 var require_lte = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/lte.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/lte.js"(exports2, module2) {
     "use strict";
     var compare = require_compare();
     var lte = (a, b, loose) => compare(a, b, loose) <= 0;
@@ -25358,9 +25361,9 @@ var require_lte = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/cmp.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/cmp.js
 var require_cmp = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/cmp.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/cmp.js"(exports2, module2) {
     "use strict";
     var eq = require_eq();
     var neq = require_neq();
@@ -25408,9 +25411,9 @@ var require_cmp = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/coerce.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/coerce.js
 var require_coerce = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/coerce.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/coerce.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var parse2 = require_parse2();
@@ -25454,9 +25457,9 @@ var require_coerce = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/internal/lrucache.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/internal/lrucache.js
 var require_lrucache = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/internal/lrucache.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/internal/lrucache.js"(exports2, module2) {
     "use strict";
     var LRUCache = class {
       constructor() {
@@ -25492,9 +25495,9 @@ var require_lrucache = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/classes/range.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/classes/range.js
 var require_range = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/classes/range.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/classes/range.js"(exports2, module2) {
     "use strict";
     var SPACE_CHARACTERS = /\s+/g;
     var Range = class _Range {
@@ -25868,9 +25871,9 @@ var require_range = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/classes/comparator.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/classes/comparator.js
 var require_comparator = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/classes/comparator.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/classes/comparator.js"(exports2, module2) {
     "use strict";
     var ANY = Symbol("SemVer ANY");
     var Comparator = class _Comparator {
@@ -25981,9 +25984,9 @@ var require_comparator = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/satisfies.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/satisfies.js
 var require_satisfies = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/functions/satisfies.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/functions/satisfies.js"(exports2, module2) {
     "use strict";
     var Range = require_range();
     var satisfies2 = (version, range, options) => {
@@ -25998,9 +26001,9 @@ var require_satisfies = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/to-comparators.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/to-comparators.js
 var require_to_comparators = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/to-comparators.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/to-comparators.js"(exports2, module2) {
     "use strict";
     var Range = require_range();
     var toComparators = (range, options) => new Range(range, options).set.map((comp) => comp.map((c) => c.value).join(" ").trim().split(" "));
@@ -26008,9 +26011,9 @@ var require_to_comparators = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/max-satisfying.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/max-satisfying.js
 var require_max_satisfying = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/max-satisfying.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/max-satisfying.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var Range = require_range();
@@ -26037,9 +26040,9 @@ var require_max_satisfying = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/min-satisfying.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/min-satisfying.js
 var require_min_satisfying = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/min-satisfying.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/min-satisfying.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var Range = require_range();
@@ -26066,9 +26069,9 @@ var require_min_satisfying = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/min-version.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/min-version.js
 var require_min_version = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/min-version.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/min-version.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var Range = require_range();
@@ -26125,9 +26128,9 @@ var require_min_version = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/valid.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/valid.js
 var require_valid2 = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/valid.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/valid.js"(exports2, module2) {
     "use strict";
     var Range = require_range();
     var validRange = (range, options) => {
@@ -26141,9 +26144,9 @@ var require_valid2 = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/outside.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/outside.js
 var require_outside = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/outside.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/outside.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var Comparator = require_comparator();
@@ -26210,9 +26213,9 @@ var require_outside = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/gtr.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/gtr.js
 var require_gtr = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/gtr.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/gtr.js"(exports2, module2) {
     "use strict";
     var outside = require_outside();
     var gtr = (version, range, options) => outside(version, range, ">", options);
@@ -26220,9 +26223,9 @@ var require_gtr = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/ltr.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/ltr.js
 var require_ltr = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/ltr.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/ltr.js"(exports2, module2) {
     "use strict";
     var outside = require_outside();
     var ltr = (version, range, options) => outside(version, range, "<", options);
@@ -26230,9 +26233,9 @@ var require_ltr = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/intersects.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/intersects.js
 var require_intersects = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/intersects.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/intersects.js"(exports2, module2) {
     "use strict";
     var Range = require_range();
     var intersects = (r1, r2, options) => {
@@ -26244,9 +26247,9 @@ var require_intersects = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/simplify.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/simplify.js
 var require_simplify = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/simplify.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/simplify.js"(exports2, module2) {
     "use strict";
     var satisfies2 = require_satisfies();
     var compare = require_compare();
@@ -26294,9 +26297,9 @@ var require_simplify = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/subset.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/subset.js
 var require_subset = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/ranges/subset.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/ranges/subset.js"(exports2, module2) {
     "use strict";
     var Range = require_range();
     var Comparator = require_comparator();
@@ -26456,9 +26459,9 @@ var require_subset = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.7.0/node_modules/semver/index.js
+// node_modules/.pnpm/semver@7.7.1/node_modules/semver/index.js
 var require_semver2 = __commonJS({
-  "node_modules/.pnpm/semver@7.7.0/node_modules/semver/index.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.1/node_modules/semver/index.js"(exports2, module2) {
     "use strict";
     var internalRe = require_re();
     var constants = require_constants6();
@@ -26564,7 +26567,7 @@ var exec = __toESM(require_exec());
 // src/planfile.ts
 var semver = __toESM(require_semver2());
 
-// node_modules/.pnpm/zod@3.24.1/node_modules/zod/lib/index.mjs
+// node_modules/.pnpm/zod@3.24.2/node_modules/zod/lib/index.mjs
 var util;
 (function(util2) {
   util2.assertEqual = (val) => val;
@@ -30385,16 +30388,32 @@ ZodReadonly.create = (type, params) => {
     ...processCreateParams(params)
   });
 };
-function custom(check, params = {}, fatal) {
+function cleanParams(params, data) {
+  const p = typeof params === "function" ? params(data) : typeof params === "string" ? { message: params } : params;
+  const p2 = typeof p === "string" ? { message: p } : p;
+  return p2;
+}
+function custom(check, _params = {}, fatal) {
   if (check)
     return ZodAny.create().superRefine((data, ctx) => {
       var _a2, _b;
-      if (!check(data)) {
-        const p = typeof params === "function" ? params(data) : typeof params === "string" ? { message: params } : params;
-        const _fatal = (_b = (_a2 = p.fatal) !== null && _a2 !== void 0 ? _a2 : fatal) !== null && _b !== void 0 ? _b : true;
-        const p2 = typeof p === "string" ? { message: p } : p;
-        ctx.addIssue({ code: "custom", ...p2, fatal: _fatal });
+      const r = check(data);
+      if (r instanceof Promise) {
+        return r.then((r2) => {
+          var _a3, _b2;
+          if (!r2) {
+            const params = cleanParams(_params, data);
+            const _fatal = (_b2 = (_a3 = params.fatal) !== null && _a3 !== void 0 ? _a3 : fatal) !== null && _b2 !== void 0 ? _b2 : true;
+            ctx.addIssue({ code: "custom", ...params, fatal: _fatal });
+          }
+        });
       }
+      if (!r) {
+        const params = cleanParams(_params, data);
+        const _fatal = (_b = (_a2 = params.fatal) !== null && _a2 !== void 0 ? _a2 : fatal) !== null && _b !== void 0 ? _b : true;
+        ctx.addIssue({ code: "custom", ...params, fatal: _fatal });
+      }
+      return;
     });
   return ZodAny.create();
 }

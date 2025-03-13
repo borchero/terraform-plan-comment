@@ -40,7 +40,7 @@ async function run() {
   if (
     !inputs.skipComment &&
     (!inputs.skipEmpty || !planIsEmpty(plan)) &&
-    github.context.eventName === 'pull_request'
+    ['pull_request', 'pull_request_target'].includes(github.context.eventName)
   ) {
     // 5) Post comment with markdown (if applicable)
     await core.group('Render comment', () => {

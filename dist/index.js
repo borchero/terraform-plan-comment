@@ -30869,7 +30869,7 @@ async function run() {
   await core.group("Adding plan to step summary", async () => {
     await core.summary.addRaw(planMarkdown).write();
   });
-  if (!inputs.skipComment && (!inputs.skipEmpty || !planIsEmpty(plan)) && github2.context.eventName === "pull_request") {
+  if (!inputs.skipComment && (!inputs.skipEmpty || !planIsEmpty(plan)) && ["pull_request", "pull_request_target"].includes(github2.context.eventName)) {
     await core.group("Render comment", () => {
       return createOrUpdateComment({ octokit, content: planMarkdown });
     });

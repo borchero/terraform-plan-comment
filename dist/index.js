@@ -30803,10 +30803,11 @@ function renderMarkdown({
 
 ---
 
-_Triggered by @${github.context.actor}_`;
+_Triggered by @${github.context.actor}`;
     if (github.context.eventName === "pull_request") {
-      footer += `, Commit: \`${github.context.payload.pull_request.head.sha}\`_`;
+      footer += `, Commit: \`${github.context.payload.pull_request.head.sha}\``;
     }
+    footer += "_";
   }
   return `## ${header}
 

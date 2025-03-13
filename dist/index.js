@@ -30803,10 +30803,11 @@ function renderMarkdown({
 
 ---
 
-_Triggered by @${github.context.actor}_`;
+_Triggered by @${github.context.actor}`;
     if (github.context.eventName === "pull_request") {
-      footer += `, Commit: \`${github.context.payload.pull_request.head.sha}\`_`;
+      footer += `, Commit: \`${github.context.payload.pull_request.head.sha}\``;
     }
+    footer += "_";
   }
   return `## ${header}
 
@@ -30869,7 +30870,7 @@ async function run() {
   await core.group("Adding plan to step summary", async () => {
     await core.summary.addRaw(planMarkdown).write();
   });
-  if (!inputs.skipComment && (!inputs.skipEmpty || !planIsEmpty(plan)) && github2.context.eventName === "pull_request") {
+  if (!inputs.skipComment && (!inputs.skipEmpty || !planIsEmpty(plan)) && ["pull_request", "pull_request_target"].includes(github2.context.eventName)) {
     await core.group("Render comment", () => {
       return createOrUpdateComment({ octokit, content: planMarkdown });
     });

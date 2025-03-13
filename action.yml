@@ -34,6 +34,8 @@ inputs:
 outputs:
   markdown:
     description: The raw markdown output of the terraform plan
+  empty:
+    description: Whether the terraform plan contains any change or not
 runs:
   using: node20
   main: dist/index.js

@@ -30817,13 +30817,13 @@ async function createOrUpdateComment({
   octokit,
   content
 }) {
-  const comments = await octokit.rest.issues.listComments({
+  const comments = await octokit.paginate(octokit.rest.issues.listComments, {
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
     issue_number: github.context.issue.number
   });
   const header = content.split("\n")[0];
-  for (const comment of comments.data) {
+  for (const comment of comments) {
     if (comment.body?.startsWith(header)) {
       await octokit.rest.issues.updateComment({
         owner: github.context.repo.owner,

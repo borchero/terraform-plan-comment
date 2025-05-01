@@ -77,7 +77,7 @@ export async function createOrUpdateComment({
   content: string
 }): Promise<void> {
   // Get all PR comments
-  const comments = await octokit.rest.issues.listComments({
+  const comments = await octokit.paginate(octokit.rest.issues.listComments, {
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
     issue_number: github.context.issue.number
@@ -86,7 +86,7 @@ export async function createOrUpdateComment({
   // Check if any comment already starts with the header that we expect. If so,
   // let's update the comment with the new content.
   const header = content.split('\n')[0]
-  for (const comment of comments.data) {
+  for (const comment of comments) {
     if (comment.body?.startsWith(header)) {
       await octokit.rest.issues.updateComment({
         owner: github.context.repo.owner,

@@ -13,7 +13,11 @@ pre-commit = "*"
 [feature.terraform.dependencies]
 terraform = "*"
 
+[feature.terragrunt.dependencies]
+terragrunt = "*"
+
 [environments]
-default = ["pre-commit", "terraform"]
+default = ["pre-commit", "terraform", "terragrunt"]
 terraform = ["terraform"]
-pre-commit = ["pre-commit", "terraform"]
+terragrunt = ["terragrunt"]
+pre-commit = ["pre-commit", "terraform", "terragrunt"]

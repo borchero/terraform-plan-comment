@@ -214,6 +214,10 @@ override.tf.json
 .terraformrc
 terraform.rc
 
+### Terragrunt ###
+# Local .terragrunt-cache directories
+**/.terragrunt-cache/*
+
 ### VisualStudioCode ###
 .vscode/*
 !.vscode/settings.json

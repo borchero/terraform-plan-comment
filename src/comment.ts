@@ -18,7 +18,7 @@ function renderResources(
 
 function renderBody(plan: RenderedPlan, options: { expandDetails: boolean }): string {
   if (planIsEmpty(plan)) {
-    return '**→ No Resource Changes!**'
+    return ''
   }
 
   let body =
@@ -54,18 +54,21 @@ function renderBody(plan: RenderedPlan, options: { expandDetails: boolean }): st
 }
 
 export function renderMarkdown({
-  plan,
+  plans,
   header,
   includeFooter,
   expandDetails
 }: {
-  plan: RenderedPlan
+  plans: RenderedPlan[]
   header: string
   includeFooter?: boolean
   expandDetails: boolean
 }): string {
   // Build body
-  const body = renderBody(plan, { expandDetails })
+  let body = plans.map((plan) => renderBody(plan, { expandDetails })).filter((item) => item !== '')
+  if (body.length === 0) {
+    body = ['**→ No Resource Changes!**']
+  }
 
   // Build footer
   let footer = ''
@@ -77,7 +80,7 @@ export function renderMarkdown({
     footer += '_'
   }
 
-  return `## ${header}\n\n${body}${footer}`
+  return `## ${header}\n\n${body.join('\n\n')}${footer}`
 }
 
 export async function createOrUpdateComment({

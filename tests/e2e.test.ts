@@ -16,7 +16,7 @@ test.each([
   const planfile = parsePlanfileJSON(planJson)
   const renderedPlan = internalRenderPlan(planfile, planTxt)
   const renderedMarkdown = renderMarkdown({
-    plan: renderedPlan,
+    plans: [renderedPlan],
     header: '📝 Terraform Plan',
     includeFooter: false,
     expandDetails: false
@@ -29,3 +29,29 @@ test.each([
     expect(renderedMarkdown).toBe(expected)
   }
 })
+
+test.each(['basic/6-terragrunt-multiplan', 'basic/5-terragrunt'])(
+  'parse-successful-terragrunt',
+  (arg) => {
+    const planJson = fs.readFileSync(`tests/fixtures/${arg}/plan.json`, 'utf-8')
+    const planTxt = fs.readFileSync(`tests/fixtures/${arg}/plan.txt`, 'utf-8')
+    const jsonPlans = planJson.split('\n').filter((line) => line !== '')
+    const renderedPlans = jsonPlans
+      .map((plan) => JSON.parse(plan))
+      .map((json) => parsePlanfileJSON(json))
+      .map((structuredPlanfile) => internalRenderPlan(structuredPlanfile, planTxt))
+    const renderedMarkdown = renderMarkdown({
+      plans: renderedPlans,
+      header: '📝 Terragrunt Plan',
+      includeFooter: false,
+      expandDetails: false,
+    })
+
+    if (process.env.GENERATE_FIXTURE === '1') {
+      fs.writeFileSync(`tests/fixtures/${arg}/rendered.md`, renderedMarkdown)
+    } else {
+      const expected = fs.readFileSync(`tests/fixtures/${arg}/rendered.md`, 'utf-8')
+      expect(renderedMarkdown).toBe(expected)
+    }
+  }
+)

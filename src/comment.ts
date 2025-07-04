@@ -7,7 +7,8 @@ function renderResources(resources: Record<string, string>): string {
   let result = ''
   for (const key of Object.keys(resources).sort()) {
     const content = resources[key]
-    result += `\n\n<details><summary><code>${key}</code></summary>\n\n${content}\n\n</details>`
+    const openAttr = inputs.expandComment ? ' open' : ''
+    result += `\n\n<details${openAttr}><summary><code>${key}</code></summary>\n\n${content}\n\n</details>`
   }
   return result
 }

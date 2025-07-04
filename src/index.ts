@@ -12,7 +12,8 @@ async function run() {
     workingDirectory: core.getInput('working-directory', { required: true }),
     header: core.getInput('header', { required: true }),
     skipEmpty: core.getBooleanInput('skip-empty', { required: true }),
-    skipComment: core.getBooleanInput('skip-comment', { required: true })
+    skipComment: core.getBooleanInput('skip-comment', { required: true }),
+    expandComment: core.getBooleanInput("expand-comment", { required: true })
   }
   const octokit = github.getOctokit(inputs.token)
 

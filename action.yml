@@ -31,6 +31,10 @@ inputs:
     description: Whether to skip posting a pull request comment entirely.
     required: true
     default: "false"
+  expand-comment:
+    description: Whether to expand the comment details by default.
+    required: true
+    default: "false"
 outputs:
   markdown:
     description: The raw markdown output of the terraform plan

@@ -67,6 +67,9 @@ GitHub Action to post the output of `terraform plan` to a pull request comment.
 
     # Skip PR comment creation entirely. When enabled, the plan will still be available in the step summary
     skip-comment: false
+
+    # Expand the PR comment details
+    expand-comment: false
 ```
 
 ### `token` (required)
@@ -108,6 +111,10 @@ Whether to skip posting a pull request comment when no changes need to be perfor
 
 Whether to skip posting a pull request comment entirely. When enabled, the plan will still be available in the step
 summary.
+
+### `expand-comment`
+
+Whether to expand the comment details. When enabled, the detail points in the pull request comment are expanded by default.
 
 ## Outputs
 

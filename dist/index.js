@@ -29920,6 +29920,22 @@ var coerce = {
 var NEVER = INVALID;
 
 // src/planfile.ts
+var planChangeSchema = external_exports.object({
+  address: external_exports.string(),
+  change: external_exports.object({
+    actions: external_exports.union([
+      external_exports.tuple([external_exports.literal("no-op")]),
+      external_exports.tuple([external_exports.literal("create")]),
+      external_exports.tuple([external_exports.literal("read")]),
+      external_exports.tuple([external_exports.literal("delete")]),
+      external_exports.tuple([external_exports.literal("update")]),
+      external_exports.tuple([external_exports.literal("delete"), external_exports.literal("create")]),
+      external_exports.tuple([external_exports.literal("create"), external_exports.literal("delete")]),
+      external_exports.tuple([external_exports.literal("forget")]),
+      external_exports.tuple([external_exports.literal("create"), external_exports.literal("forget")])
+    ])
+  })
+});
 var planfileSchema = external_exports.object({
   format_version: external_exports.string().refine(
     (v) => {
@@ -29930,24 +29946,8 @@ var planfileSchema = external_exports.object({
       message: `Version ${v} of Terraform planfile is currently unsupported (must be version 1.x).`
     })
   ),
-  resource_changes: external_exports.array(
-    external_exports.object({
-      address: external_exports.string(),
-      change: external_exports.object({
-        actions: external_exports.union([
-          external_exports.tuple([external_exports.literal("no-op")]),
-          external_exports.tuple([external_exports.literal("create")]),
-          external_exports.tuple([external_exports.literal("read")]),
-          external_exports.tuple([external_exports.literal("delete")]),
-          external_exports.tuple([external_exports.literal("update")]),
-          external_exports.tuple([external_exports.literal("delete"), external_exports.literal("create")]),
-          external_exports.tuple([external_exports.literal("create"), external_exports.literal("delete")]),
-          external_exports.tuple([external_exports.literal("forget")]),
-          external_exports.tuple([external_exports.literal("create"), external_exports.literal("forget")])
-        ])
-      })
-    })
-  ).optional()
+  resource_drift: external_exports.array(planChangeSchema).optional(),
+  resource_changes: external_exports.array(planChangeSchema).optional()
 });
 function parsePlanfileJSON(json) {
   return planfileSchema.parse(json);
@@ -30014,16 +30014,44 @@ function extractResources(names, humanReadablePlan) {
     {}
   );
 }
-function internalRenderPlan(structuredPlan, humanReadablePlan) {
-  if (structuredPlan.resource_changes === void 0 || structuredPlan.resource_changes.length === 0) {
-    return {};
-  }
-  const createdResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["create"].toString()).map((r) => r.address);
-  const updatedResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["update"].toString()).map((r) => r.address);
-  const recreatedResources = structuredPlan.resource_changes.filter(
+function queryChanges(changes, changeKind) {
+  return changes.filter((r) => r.change.actions.toString() === [changeKind].toString()).map((r) => r.address);
+}
+function getRecreatedChanges(changes) {
+  return changes.filter(
     (r) => r.change.actions.toString() === ["delete", "create"].toString() || r.change.actions.toString() === ["create", "delete"].toString()
   ).map((r) => r.address);
-  const deletedResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["delete"].toString()).map((r) => r.address);
+}
+function internalRenderPlan(structuredPlan, humanReadablePlan) {
+  if ((structuredPlan.resource_changes === void 0 || structuredPlan.resource_changes.length === 0) && (structuredPlan.resource_drift === void 0 || structuredPlan.resource_drift.length === 0)) {
+    return {};
+  }
+  const createdResources = queryChanges(
+    structuredPlan.resource_changes || [],
+    "create"
+  ).concat(queryChanges(
+    structuredPlan.resource_drift || [],
+    "create"
+  ));
+  const updatedResources = queryChanges(
+    structuredPlan.resource_changes || [],
+    "update"
+  ).concat(queryChanges(
+    structuredPlan.resource_drift || [],
+    "update"
+  ));
+  const deletedResources = queryChanges(
+    structuredPlan.resource_changes || [],
+    "delete"
+  ).concat(
+    queryChanges(
+      structuredPlan.resource_drift || [],
+      "delete"
+    )
+  );
+  const recreatedResources = getRecreatedChanges(
+    structuredPlan.resource_changes || []
+  ).concat(getRecreatedChanges(structuredPlan.resource_drift || []));
   return {
     createdResources: extractResources(createdResources, humanReadablePlan),
     updatedResources: extractResources(updatedResources, humanReadablePlan),

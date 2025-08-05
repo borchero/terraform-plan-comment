@@ -29957,6 +29957,9 @@ function parsePlanfileJSON(json) {
 function planIsEmpty(plan) {
   return !plan.createdResources && !plan.recreatedResources && !plan.updatedResources && !plan.deletedResources;
 }
+function plansAreEmpty(plans) {
+  return !plans.map((plan) => planIsEmpty(plan)).some((result) => result === false);
+}
 function extractResourceContent(name, humanReadablePlan) {
   const lines = humanReadablePlan.split("\n");
   const resourceHeaderIndex = lines.findIndex((line) => line.startsWith(`  # ${name}`));
@@ -30031,6 +30034,24 @@ function internalRenderPlan(structuredPlan, humanReadablePlan) {
     deletedResources: extractResources(deletedResources, humanReadablePlan)
   };
 }
+async function renderTerraformPlan({
+  planfile,
+  terraformCommand,
+  options,
+  humanReadablePlanfile
+}) {
+  const structuredPlanfile = await exec.getExecOutput(terraformCommand, ["show", "-json", planfile], options).then((output) => JSON.parse(output.stdout)).then((json) => parsePlanfileJSON(json));
+  return [internalRenderPlan(structuredPlanfile, humanReadablePlanfile)];
+}
+async function renderTerragruntPlan({
+  planfile,
+  terraformCommand,
+  options,
+  humanReadablePlanfile
+}) {
+  const jsonPlans = await exec.getExecOutput(terraformCommand, ["show", "-json", planfile], options).then((output) => output.stdout.split("\n")).then((plans) => plans.filter((plan) => plan !== ""));
+  return jsonPlans.map((plan) => JSON.parse(plan)).map((json) => parsePlanfileJSON(json)).map((structuredPlanfile) => internalRenderPlan(structuredPlanfile, humanReadablePlanfile));
+}
 async function renderPlan({
   planfile,
   terraformCommand,
@@ -30040,9 +30061,25 @@ async function renderPlan({
     cwd: workingDirectory,
     silent: true
   };
-  const structuredPlanfile = await exec.getExecOutput(terraformCommand, ["show", "-json", planfile], options).then((output) => JSON.parse(output.stdout)).then((json) => parsePlanfileJSON(json));
   const humanReadablePlanfile = await exec.getExecOutput(terraformCommand, ["show", "-no-color", planfile], options).then((output) => output.stdout);
-  return internalRenderPlan(structuredPlanfile, humanReadablePlanfile);
+  try {
+    return await renderTerraformPlan({
+      planfile,
+      terraformCommand,
+      options,
+      humanReadablePlanfile
+    });
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      return await renderTerragruntPlan({
+        planfile,
+        terraformCommand,
+        options,
+        humanReadablePlanfile
+      });
+    }
+  }
+  return [];
 }
 
 // src/comment.ts
@@ -30062,7 +30099,7 @@ ${content}
 }
 function renderBody(plan) {
   if (planIsEmpty(plan)) {
-    return "**\u2192 No Resource Changes!**";
+    return "";
   }
   let body = `**\u2192 Resource Changes: ${Object.keys(plan.createdResources ?? {}).length} to create, ${Object.keys(plan.updatedResources ?? {}).length} to update, ${Object.keys(plan.recreatedResources ?? {}).length} to re-create, ${Object.keys(plan.deletedResources ?? {}).length} to delete.**`;
   if (plan.createdResources) {
@@ -30084,11 +30121,14 @@ function renderBody(plan) {
   return body;
 }
 function renderMarkdown({
-  plan,
+  plans,
   header,
   includeFooter
 }) {
-  const body = renderBody(plan);
+  let body = plans.map((plan) => renderBody(plan)).filter((item) => item !== "");
+  if (body.length === 0) {
+    body = ["**\u2192 No Resource Changes!**"];
+  }
   let footer = "";
   if (includeFooter === void 0 || includeFooter === true) {
     footer = `
@@ -30103,7 +30143,7 @@ _Triggered by @${github.context.actor}`;
   }
   return `## ${header}
 
-${body}${footer}`;
+${body.join("\n\n")}${footer}`;
 }
 async function createOrUpdateComment({
   octokit,
@@ -30146,7 +30186,7 @@ async function run() {
     skipComment: core.getBooleanInput("skip-comment", { required: true })
   };
   const octokit = github2.getOctokit(inputs.token);
-  const plan = await core.group(
+  const plans = await core.group(
     "Render plan",
     () => renderPlan({
       planfile: inputs.planfile,
@@ -30155,15 +30195,15 @@ async function run() {
     })
   );
   const planMarkdown = await core.group("Render plan diff markdown", async () => {
-    const markdown = renderMarkdown({ plan, header: inputs.header });
+    const markdown = renderMarkdown({ plans, header: inputs.header });
     core.setOutput("markdown", markdown);
-    core.setOutput("empty", planIsEmpty(plan));
+    core.setOutput("empty", plansAreEmpty(plans));
     return markdown;
   });
   await core.group("Adding plan to step summary", async () => {
     await core.summary.addRaw(planMarkdown).write();
   });
-  if (!inputs.skipComment && (!inputs.skipEmpty || !planIsEmpty(plan)) && ["pull_request", "pull_request_target"].includes(github2.context.eventName)) {
+  if (!inputs.skipComment && (!inputs.skipEmpty || !plansAreEmpty(plans)) && ["pull_request", "pull_request_target"].includes(github2.context.eventName)) {
     await core.group("Render comment", () => {
       return createOrUpdateComment({ octokit, content: planMarkdown });
     });

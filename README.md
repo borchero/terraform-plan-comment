@@ -14,6 +14,8 @@ GitHub Action to post the output of `terraform plan` to a pull request comment.
 
 ## Usage
 
+### With terraform
+
 ```yaml
 - name: Setup terraform
   uses: hashicorp/setup-terraform@v3
@@ -26,6 +28,40 @@ GitHub Action to post the output of `terraform plan` to a pull request comment.
   with:
     token: ${{ github.token }}
     planfile: .planfile
+```
+
+### With terragrunt
+
+```yaml
+name: Plan
+
+env:
+  TG_NON_INTERACTIVE: "true"
+  TG_NO_COLOR: "true"
+  TG_ALL: "true"
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    container:
+      image: alpine/terragrunt:tf1.12.1
+    steps:
+      - name: Initialize
+        run: terragrunt init
+      - name: Plan
+        run: terragrunt plan -out .planfile
+      - name: Post PR comment
+        uses: borchero/terraform-plan-comment@v2
+        env:
+          # By default, terragrunt outputs plan including time, log level and message,
+          # while terraform only outputs message. In order to keep consistency on output
+          # for proper plan matching of this action, we need to limit this output to only
+          # message
+          TG_LOG_CUSTOM_FORMAT: "%msg(path=relative)"
+        with:
+          token: ${{ github.token }}
+          planfile: .planfile
+          terraform-cmd: terragrunt
 ```
 
 ### Example Comments

@@ -18129,10 +18129,10 @@ var require_oidc_utils = __commonJS({
         return __awaiter(this, void 0, void 0, function* () {
           const httpclient = _OidcClient.createHttpClient();
           const res = yield httpclient.getJson(id_token_url).catch((error) => {
-            throw new Error(`Failed to get ID Token. 
- 
+            throw new Error(`Failed to get ID Token.
+
         Error Code : ${error.statusCode}
- 
+
         Error Message: ${error.message}`);
           });
           const id_token = (_a2 = res.result) === null || _a2 === void 0 ? void 0 : _a2.value;
@@ -30143,7 +30143,8 @@ async function run() {
     workingDirectory: core.getInput("working-directory", { required: true }),
     header: core.getInput("header", { required: true }),
     skipEmpty: core.getBooleanInput("skip-empty", { required: true }),
-    skipComment: core.getBooleanInput("skip-comment", { required: true })
+    skipComment: core.getBooleanInput("skip-comment", { required: true }),
+    expandComment: core.getBooleanInput("expand-comment", { required: true })
   };
   const octokit = github2.getOctokit(inputs.token);
   const plan = await core.group(

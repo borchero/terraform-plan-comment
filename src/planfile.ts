@@ -7,9 +7,9 @@ const planfileSchema = z.object({
       const sv = semver.coerce(v)
       return sv && semver.satisfies(sv, '1.x')
     },
-    (v) => ({
-      message: `Version ${v} of Terraform planfile is currently unsupported (must be version 1.x).`
-    })
+    {
+      message: `Version of Terraform planfile is currently unsupported (must be version 1.x).`
+    }
   ),
   resource_changes: z
     .array(

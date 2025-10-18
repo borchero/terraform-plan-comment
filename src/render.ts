@@ -153,7 +153,12 @@ export async function renderPlan({
   }
   const structuredPlanfile = await exec
     .getExecOutput(terraformCommand, ['show', '-json', planfile], options)
-    .then((output) => JSON.parse(output.stdout))
+    .then((output) => {
+      const jsonStart = output.stdout.indexOf('{')
+      if (jsonStart === -1) throw new Error('No JSON found in planfile output')
+      const jsonText = output.stdout.slice(jsonStart)
+      return JSON.parse(jsonText)
+    })
     .then((json) => parsePlanfileJSON(json))
   const humanReadablePlanfile = await exec
     .getExecOutput(terraformCommand, ['show', '-no-color', planfile], options)

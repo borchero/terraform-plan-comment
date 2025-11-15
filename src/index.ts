@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { createOrUpdateComment, renderMarkdown } from './comment'
+import { createOrUpdateComment, deleteComment, renderMarkdown } from './comment'
 import { planIsEmpty, renderPlan } from './render'
 
 async function run() {
@@ -40,13 +40,19 @@ async function run() {
 
   if (
     !inputs.skipComment &&
-    (!inputs.skipEmpty || !planIsEmpty(plan)) &&
     ['pull_request', 'pull_request_target'].includes(github.context.eventName)
   ) {
-    // 5) Post comment with markdown (if applicable)
-    await core.group('Render comment', () => {
-      return createOrUpdateComment({ octokit, content: planMarkdown })
-    })
+    if (!inputs.skipEmpty || !planIsEmpty(plan)) {
+      // 5) Post comment with markdown (if applicable)
+      await core.group('Render comment', () => {
+        return createOrUpdateComment({ octokit, content: planMarkdown })
+      })
+    } else {
+      // 6) Delete existing comment if plan is empty and skip-empty is enabled
+      await core.group('Delete outdated comment', () => {
+        return deleteComment({ octokit, header: `## ${inputs.header}` })
+      })
+    }
   }
 }
 

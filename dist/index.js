@@ -38668,6 +38668,27 @@ async function createOrUpdateComment({
     body: content
   });
 }
+async function deleteComment({
+  octokit,
+  header
+}) {
+  const comments = await octokit.paginate(octokit.rest.issues.listComments, {
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    issue_number: github.context.issue.number
+  });
+  for (const comment of comments) {
+    if (comment.body?.startsWith(header)) {
+      await octokit.rest.issues.deleteComment({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        comment_id: comment.id
+      });
+      return true;
+    }
+  }
+  return false;
+}
 
 // src/index.ts
 async function run() {
@@ -38698,10 +38719,16 @@ async function run() {
   await core.group("Adding plan to step summary", async () => {
     await core.summary.addRaw(planMarkdown).write();
   });
-  if (!inputs.skipComment && (!inputs.skipEmpty || !planIsEmpty(plan)) && ["pull_request", "pull_request_target"].includes(github2.context.eventName)) {
-    await core.group("Render comment", () => {
-      return createOrUpdateComment({ octokit, content: planMarkdown });
-    });
+  if (!inputs.skipComment && ["pull_request", "pull_request_target"].includes(github2.context.eventName)) {
+    if (!inputs.skipEmpty || !planIsEmpty(plan)) {
+      await core.group("Render comment", () => {
+        return createOrUpdateComment({ octokit, content: planMarkdown });
+      });
+    } else {
+      await core.group("Delete outdated comment", () => {
+        return deleteComment({ octokit, header: `## ${inputs.header}` });
+      });
+    }
   }
 }
 async function main() {

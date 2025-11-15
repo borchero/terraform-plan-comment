@@ -22,10 +22,9 @@ repos:
         always_run: true
       - id: prettier
         name: prettier
-        entry: pixi run -e pre-commit pnpm prettier
+        entry: pixi run -e pre-commit pnpm prettier --write
         language: system
-        pass_filenames: false
-        types_or: [markdown, yaml]
+        types: [markdown, yaml]
       - id: typos
         name: typos
         entry: pixi run -e pre-commit typos --force-exclude

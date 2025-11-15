@@ -67,6 +67,10 @@ GitHub Action to post the output of `terraform plan` to a pull request comment.
 
     # Skip PR comment creation entirely. When enabled, the plan will still be available in the step summary
     skip-comment: false
+
+    # Pull request number to post the comment to (Optional)
+    # Useful for workflow_dispatch triggers where PR context is not automatically available
+    pr-number: ""
 ```
 
 ### `token` (required)
@@ -108,6 +112,37 @@ Whether to skip posting a pull request comment when no changes need to be perfor
 
 Whether to skip posting a pull request comment entirely. When enabled, the plan will still be available in the step
 summary.
+
+### `pr-number`
+
+The pull request number to post the comment to. When not provided, the action will attempt to automatically determine
+the PR number from the event context (available for `pull_request` and `pull_request_target` events).
+
+This parameter is particularly useful for `workflow_dispatch` triggers or other non-PR events where you want to post a
+comment to a specific pull request. You can use a previous step to find the PR number associated with your branch.
+
+Example usage with `workflow_dispatch`:
+
+```yaml
+- name: Find PR number
+  id: find-pr
+  run: |
+    PR_NUMBER=$(gh pr view --json number --jq .number || echo "")
+    echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+  env:
+    GH_TOKEN: ${{ github.token }}
+
+- name: Terraform Plan
+  run: terraform plan -out=terraform.tfplan
+
+- name: Post PR comment
+  if: steps.find-pr.outputs.pr_number
+  uses: borchero/terraform-plan-comment@v2
+  with:
+    token: ${{ github.token }}
+    planfile: terraform.tfplan
+    pr-number: ${{ steps.find-pr.outputs.pr_number }}
+```
 
 ## Outputs
 

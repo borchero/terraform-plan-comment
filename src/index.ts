@@ -12,7 +12,8 @@ async function run() {
     workingDirectory: core.getInput('working-directory', { required: true }),
     header: core.getInput('header', { required: true }),
     skipEmpty: core.getBooleanInput('skip-empty', { required: true }),
-    skipComment: core.getBooleanInput('skip-comment', { required: true })
+    skipComment: core.getBooleanInput('skip-comment', { required: true }),
+    prNumber: core.getInput('pr-number', { required: false })
   }
   const octokit = github.getOctokit(inputs.token)
 
@@ -38,14 +39,21 @@ async function run() {
     await core.summary.addRaw(planMarkdown).write()
   })
 
-  if (
+  // Determine if we should post a comment
+  const shouldPostComment =
     !inputs.skipComment &&
     (!inputs.skipEmpty || !planIsEmpty(plan)) &&
-    ['pull_request', 'pull_request_target'].includes(github.context.eventName)
-  ) {
+    (inputs.prNumber ||
+      ['pull_request', 'pull_request_target'].includes(github.context.eventName))
+
+  if (shouldPostComment) {
     // 5) Post comment with markdown (if applicable)
     await core.group('Render comment', () => {
-      return createOrUpdateComment({ octokit, content: planMarkdown })
+      return createOrUpdateComment({
+        octokit,
+        content: planMarkdown,
+        prNumber: inputs.prNumber ? parseInt(inputs.prNumber, 10) : undefined
+      })
     })
   }
 }

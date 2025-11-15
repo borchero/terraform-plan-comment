@@ -71,16 +71,21 @@ export function renderMarkdown({
 
 export async function createOrUpdateComment({
   octokit,
-  content
+  content,
+  prNumber
 }: {
   octokit: InstanceType<typeof GitHub>
   content: string
+  prNumber?: number
 }): Promise<void> {
+  // Use provided PR number or fall back to context
+  const issueNumber = prNumber ?? github.context.issue.number
+
   // Get all PR comments
   const comments = await octokit.paginate(octokit.rest.issues.listComments, {
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
-    issue_number: github.context.issue.number
+    issue_number: issueNumber
   })
 
   // Check if any comment already starts with the header that we expect. If so,
@@ -102,7 +107,7 @@ export async function createOrUpdateComment({
   await octokit.rest.issues.createComment({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
-    issue_number: github.context.issue.number,
+    issue_number: issueNumber,
     body: content
   })
 }

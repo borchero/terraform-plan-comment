@@ -31,6 +31,9 @@ inputs:
     description: Whether to skip posting a pull request comment entirely.
     required: true
     default: "false"
+  pr-number:
+    description: The pull request number to post the comment to. When not provided, the action will attempt to automatically determine the PR number from the event context. This is useful for workflow_dispatch triggers.
+    required: false
 outputs:
   markdown:
     description: The raw markdown output of the terraform plan

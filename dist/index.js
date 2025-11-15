@@ -38489,12 +38489,14 @@ ${body}${footer}`;
 }
 async function createOrUpdateComment({
   octokit,
-  content
+  content,
+  prNumber
 }) {
+  const issueNumber = prNumber ?? github.context.issue.number;
   const comments = await octokit.paginate(octokit.rest.issues.listComments, {
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
-    issue_number: github.context.issue.number
+    issue_number: issueNumber
   });
   const header = content.split("\n")[0];
   for (const comment of comments) {
@@ -38511,7 +38513,7 @@ async function createOrUpdateComment({
   await octokit.rest.issues.createComment({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
-    issue_number: github.context.issue.number,
+    issue_number: issueNumber,
     body: content
   });
 }
@@ -38525,7 +38527,8 @@ async function run() {
     workingDirectory: core.getInput("working-directory", { required: true }),
     header: core.getInput("header", { required: true }),
     skipEmpty: core.getBooleanInput("skip-empty", { required: true }),
-    skipComment: core.getBooleanInput("skip-comment", { required: true })
+    skipComment: core.getBooleanInput("skip-comment", { required: true }),
+    prNumber: core.getInput("pr-number", { required: false })
   };
   const octokit = github2.getOctokit(inputs.token);
   const plan = await core.group(
@@ -38545,9 +38548,14 @@ async function run() {
   await core.group("Adding plan to step summary", async () => {
     await core.summary.addRaw(planMarkdown).write();
   });
-  if (!inputs.skipComment && (!inputs.skipEmpty || !planIsEmpty(plan)) && ["pull_request", "pull_request_target"].includes(github2.context.eventName)) {
+  const shouldPostComment = !inputs.skipComment && (!inputs.skipEmpty || !planIsEmpty(plan)) && (inputs.prNumber || ["pull_request", "pull_request_target"].includes(github2.context.eventName));
+  if (shouldPostComment) {
     await core.group("Render comment", () => {
-      return createOrUpdateComment({ octokit, content: planMarkdown });
+      return createOrUpdateComment({
+        octokit,
+        content: planMarkdown,
+        prNumber: inputs.prNumber ? parseInt(inputs.prNumber, 10) : void 0
+      });
     });
   }
 }

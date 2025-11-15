@@ -10,6 +10,8 @@ pnpm = "*"
 
 [feature.pre-commit.dependencies]
 pre-commit = "*"
+pre-commit-hooks = "*"
+typos = "*"
 
 [feature.terraform.dependencies]
 terraform = "*"

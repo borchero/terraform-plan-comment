@@ -38499,7 +38499,7 @@ function extractResourceContent(name, humanReadablePlan) {
   if (resourceHeaderIndex < 0) {
     throw Error(`Resource '${name}' is modified but cannot be found in human-readable plan.`);
   }
-  let resourceLineIndex = lines.slice(resourceHeaderIndex).findIndex((line) => line.match(/.*[+-~] resource/));
+  let resourceLineIndex = lines.slice(resourceHeaderIndex).findIndex((line) => line.match(/.*[+-~⇄] (resource|ephemeral)/));
   if (resourceLineIndex < 0) {
     throw Error(`Resource block cannot be found for resource '${name}'.`);
   }

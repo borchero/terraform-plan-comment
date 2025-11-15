@@ -35,7 +35,7 @@ function extractResourceContent(name: string, humanReadablePlan: string): Resour
   }
   let resourceLineIndex = lines
     .slice(resourceHeaderIndex)
-    .findIndex((line) => line.match(/.*[+-~] resource/))
+    .findIndex((line) => line.match(/.*[+-~⇄] (resource|ephemeral)/))
   if (resourceLineIndex < 0) {
     throw Error(`Resource block cannot be found for resource '${name}'.`)
   }

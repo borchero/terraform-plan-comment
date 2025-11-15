@@ -38529,7 +38529,7 @@ async function run() {
     header: core.getInput("header", { required: true }),
     skipEmpty: core.getBooleanInput("skip-empty", { required: true }),
     skipComment: core.getBooleanInput("skip-comment", { required: true }),
-    prNumber: prNumberInput ? parseInt(prNumberInput, 10) : void 0
+    prNumber: prNumberInput && prNumberInput !== "" ? parseInt(prNumberInput, 10) : void 0
   };
   const octokit = github2.getOctokit(inputs.token);
   const plan = await core.group(

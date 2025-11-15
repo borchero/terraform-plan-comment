@@ -14,7 +14,7 @@ async function run() {
     header: core.getInput('header', { required: true }),
     skipEmpty: core.getBooleanInput('skip-empty', { required: true }),
     skipComment: core.getBooleanInput('skip-comment', { required: true }),
-    prNumber: prNumberInput ? parseInt(prNumberInput, 10) : undefined
+    prNumber: prNumberInput && prNumberInput !== '' ? parseInt(prNumberInput, 10) : undefined
   }
   const octokit = github.getOctokit(inputs.token)
 

@@ -6,7 +6,7 @@ terraform {
   }
 }
 
-ephemeral "random_password" "db" {
+ephemeral "random_password" "test" {
   length  = 16
   special = true
 }

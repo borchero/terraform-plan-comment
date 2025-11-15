@@ -23,4 +23,6 @@ run_step "$SCRIPT_DIR/basic/2-delete"
 run_step "$SCRIPT_DIR/basic/3-remove"
 run_step "$SCRIPT_DIR/basic/4-empty"
 
+run_step "$SCRIPT_DIR/ephemeral/0-create"
+
 find $SCRIPT_DIR -name '.tfstate*' -exec rm -f {} \+

@@ -1,0 +1,19 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.13.5",
+  "planned_values": {
+    "root_module": {}
+  },
+  "configuration": {
+    "provider_config": {
+      "random": {
+        "name": "random",
+        "full_name": "registry.terraform.io/hashicorp/random"
+      }
+    },
+    "root_module": {}
+  },
+  "applyable": false,
+  "complete": true,
+  "errored": false
+}

@@ -2,18 +2,84 @@
   "format_version": "1.2",
   "terraform_version": "1.13.5",
   "planned_values": {
-    "root_module": {}
+    "root_module": {
+      "resources": [
+        {
+          "address": "null_resource.run_command",
+          "mode": "managed",
+          "type": "null_resource",
+          "name": "run_command",
+          "provider_name": "registry.terraform.io/hashicorp/null",
+          "schema_version": 0,
+          "values": {
+            "triggers": null
+          },
+          "sensitive_values": {}
+        }
+      ]
+    }
   },
+  "resource_changes": [
+    {
+      "address": "null_resource.run_command",
+      "mode": "managed",
+      "type": "null_resource",
+      "name": "run_command",
+      "provider_name": "registry.terraform.io/hashicorp/null",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "triggers": null
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    }
+  ],
   "configuration": {
     "provider_config": {
+      "null": {
+        "name": "null",
+        "full_name": "registry.terraform.io/hashicorp/null"
+      },
       "random": {
         "name": "random",
         "full_name": "registry.terraform.io/hashicorp/random"
       }
     },
-    "root_module": {}
+    "root_module": {
+      "resources": [
+        {
+          "address": "null_resource.run_command",
+          "mode": "managed",
+          "type": "null_resource",
+          "name": "run_command",
+          "provider_config_key": "null",
+          "provisioners": [
+            {
+              "type": "local-exec",
+              "expressions": {
+                "command": {
+                  "references": [
+                    "ephemeral.random_password.test.result",
+                    "ephemeral.random_password.test"
+                  ]
+                }
+              }
+            }
+          ],
+          "schema_version": 0
+        }
+      ]
+    }
   },
-  "applyable": false,
+  "applyable": true,
   "complete": true,
   "errored": false
 }

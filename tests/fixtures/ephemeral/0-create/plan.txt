@@ -1,5 +1,13 @@
 
-No changes. Your infrastructure matches the configuration.
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
 
-Terraform has compared your real infrastructure against your configuration
-and found no differences, so no changes are needed.
+Terraform will perform the following actions:
+
+  # null_resource.run_command will be created
+  + resource "null_resource" "run_command" {
+      + id = (known after apply)
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.

@@ -1,5 +1,5 @@
 import * as exec from '@actions/exec'
-import type { StructuredPlanfile } from './planfile'
+import type { StructuredPlanfile, StructuredPlanChange } from './planfile'
 import { parsePlanfileJSON } from './planfile'
 
 export type RenderedPlan = {
@@ -100,35 +100,64 @@ function extractResources(
   )
 }
 
-export function internalRenderPlan(
-  structuredPlan: StructuredPlanfile,
-  humanReadablePlan: string
-): RenderedPlan {
-  // If there are no changes, we do not need to build any sections
-  if (
-    structuredPlan.resource_changes === undefined ||
-    structuredPlan.resource_changes.length === 0
-  ) {
-    return {}
-  }
+function queryChanges(changes: StructuredPlanChange[], changeKind: string): string[] {
+  return changes
+    .filter((r) => r.change.actions.toString() === [changeKind].toString())
+    .map((r) => r.address)
+}
 
-  // Partition changes for output formatting and extract resources
-  const createdResources = structuredPlan.resource_changes
-    .filter((r) => r.change.actions.toString() === ['create'].toString())
-    .map((r) => r.address)
-  const updatedResources = structuredPlan.resource_changes
-    .filter((r) => r.change.actions.toString() === ['update'].toString())
-    .map((r) => r.address)
-  const recreatedResources = structuredPlan.resource_changes
+function getRecreatedChanges(changes: StructuredPlanChange[]): string[] {
+  return changes
     .filter(
       (r) =>
         r.change.actions.toString() === ['delete', 'create'].toString() ||
         r.change.actions.toString() === ['create', 'delete'].toString()
     )
     .map((r) => r.address)
-  const deletedResources = structuredPlan.resource_changes
-    .filter((r) => r.change.actions.toString() === ['delete'].toString())
-    .map((r) => r.address)
+}
+
+export function internalRenderPlan(
+  structuredPlan: StructuredPlanfile,
+  humanReadablePlan: string
+): RenderedPlan {
+  // If there are no changes, we do not need to build any sections
+  if (
+    (
+      structuredPlan.resource_changes === undefined ||
+      structuredPlan.resource_changes.length === 0
+    ) && (
+      structuredPlan.resource_drift === undefined ||
+      structuredPlan.resource_drift.length === 0
+    )
+  ) {
+    return {}
+  }
+
+  // Partition changes for output formatting and extract resources
+  const createdResources = queryChanges(
+    structuredPlan.resource_changes || [],
+    'create'
+  ).concat(queryChanges(
+    structuredPlan.resource_drift || [],
+    'create',
+  ))
+  const updatedResources = queryChanges(
+    structuredPlan.resource_changes || [],
+    'update'
+  ).concat(queryChanges(
+    structuredPlan.resource_drift || [],
+    'update',
+  ))
+  const deletedResources = queryChanges(
+    structuredPlan.resource_changes || [],
+    'delete'
+  ).concat(queryChanges(
+    structuredPlan.resource_drift || [],
+    'delete')
+  )
+  const recreatedResources = getRecreatedChanges(
+    structuredPlan.resource_changes || []
+  ).concat(getRecreatedChanges(structuredPlan.resource_drift || []))
 
   return {
     createdResources: extractResources(createdResources, humanReadablePlan),

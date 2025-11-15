@@ -1,5 +1,6 @@
 .terraform.lock.hcl
 .pixi
+package-lock.json
 
 # Created by https://www.toptal.com/developers/gitignore/api/node,macos,terraform,visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=node,macos,terraform,visualstudiocode

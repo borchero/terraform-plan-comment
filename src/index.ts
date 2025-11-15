@@ -5,6 +5,7 @@ import { planIsEmpty, renderPlan } from './render'
 
 async function run() {
   // 1) Setup
+  const prNumberInput = core.getInput('pr-number', { required: false })
   const inputs = {
     token: core.getInput('token', { required: true }),
     planfile: core.getInput('planfile', { required: true }),
@@ -13,7 +14,7 @@ async function run() {
     header: core.getInput('header', { required: true }),
     skipEmpty: core.getBooleanInput('skip-empty', { required: true }),
     skipComment: core.getBooleanInput('skip-comment', { required: true }),
-    prNumber: core.getInput('pr-number', { required: false })
+    prNumber: prNumberInput ? parseInt(prNumberInput, 10) : undefined
   }
   const octokit = github.getOctokit(inputs.token)
 
@@ -52,7 +53,7 @@ async function run() {
       return createOrUpdateComment({
         octokit,
         content: planMarkdown,
-        prNumber: inputs.prNumber ? parseInt(inputs.prNumber, 10) : undefined
+        prNumber: inputs.prNumber
       })
     })
   }

@@ -38520,6 +38520,7 @@ async function createOrUpdateComment({
 
 // src/index.ts
 async function run() {
+  const prNumberInput = core.getInput("pr-number", { required: false });
   const inputs = {
     token: core.getInput("token", { required: true }),
     planfile: core.getInput("planfile", { required: true }),
@@ -38528,7 +38529,7 @@ async function run() {
     header: core.getInput("header", { required: true }),
     skipEmpty: core.getBooleanInput("skip-empty", { required: true }),
     skipComment: core.getBooleanInput("skip-comment", { required: true }),
-    prNumber: core.getInput("pr-number", { required: false })
+    prNumber: prNumberInput ? parseInt(prNumberInput, 10) : void 0
   };
   const octokit = github2.getOctokit(inputs.token);
   const plan = await core.group(
@@ -38554,7 +38555,7 @@ async function run() {
       return createOrUpdateComment({
         octokit,
         content: planMarkdown,
-        prNumber: inputs.prNumber ? parseInt(inputs.prNumber, 10) : void 0
+        prNumber: inputs.prNumber
       });
     });
   }

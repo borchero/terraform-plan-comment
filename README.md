@@ -121,29 +121,6 @@ the PR number from the event context (available for `pull_request` and `pull_req
 This parameter is particularly useful for `workflow_dispatch` triggers or other non-PR events where you want to post a
 comment to a specific pull request. You can use a previous step to find the PR number associated with your branch.
 
-Example usage with `workflow_dispatch`:
-
-```yaml
-- name: Find PR number
-  id: find-pr
-  run: |
-    PR_NUMBER=$(gh pr view --json number --jq .number || echo "")
-    echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-  env:
-    GH_TOKEN: ${{ github.token }}
-
-- name: Terraform Plan
-  run: terraform plan -out=terraform.tfplan
-
-- name: Post PR comment
-  if: steps.find-pr.outputs.pr_number
-  uses: borchero/terraform-plan-comment@v2
-  with:
-    token: ${{ github.token }}
-    planfile: terraform.tfplan
-    pr-number: ${{ steps.find-pr.outputs.pr_number }}
-```
-
 ## Outputs
 
 This action provides the following output:

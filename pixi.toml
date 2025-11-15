@@ -1,7 +1,8 @@
-[project]
-name = "terraform-plan-comment"
+[workspace]
 channels = ["conda-forge"]
+name = "terraform-plan-comment"
 platforms = ["linux-64", "osx-arm64"]
+requires-pixi = ">=0.58"
 
 [dependencies]
 nodejs = "=20"
@@ -9,11 +10,13 @@ pnpm = "*"
 
 [feature.pre-commit.dependencies]
 pre-commit = "*"
+pre-commit-hooks = "*"
+typos = "*"
 
 [feature.terraform.dependencies]
 terraform = "*"
 
 [environments]
 default = ["pre-commit", "terraform"]
-terraform = ["terraform"]
 pre-commit = ["pre-commit", "terraform"]
+terraform = ["terraform"]

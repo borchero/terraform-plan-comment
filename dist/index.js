@@ -38478,7 +38478,8 @@ var planfileSchema = external_exports.object({
           external_exports.tuple([external_exports.literal("delete"), external_exports.literal("create")]),
           external_exports.tuple([external_exports.literal("create"), external_exports.literal("delete")]),
           external_exports.tuple([external_exports.literal("forget")]),
-          external_exports.tuple([external_exports.literal("create"), external_exports.literal("forget")])
+          external_exports.tuple([external_exports.literal("create"), external_exports.literal("forget")]),
+          external_exports.tuple([external_exports.literal("open")])
         ])
       })
     })
@@ -38490,7 +38491,7 @@ function parsePlanfileJSON(json2) {
 
 // src/render.ts
 function planIsEmpty(plan) {
-  return !plan.createdResources && !plan.recreatedResources && !plan.updatedResources && !plan.deletedResources;
+  return !plan.createdResources && !plan.recreatedResources && !plan.updatedResources && !plan.deletedResources && !plan.ephemeralResources;
 }
 function extractResourceContent(name, humanReadablePlan) {
   const lines = humanReadablePlan.split("\n");
@@ -38498,7 +38499,7 @@ function extractResourceContent(name, humanReadablePlan) {
   if (resourceHeaderIndex < 0) {
     throw Error(`Resource '${name}' is modified but cannot be found in human-readable plan.`);
   }
-  let resourceLineIndex = lines.slice(resourceHeaderIndex).findIndex((line) => line.match(/.*[+-~] resource/));
+  let resourceLineIndex = lines.slice(resourceHeaderIndex).findIndex((line) => line.match(/.*[+-~⇄] (resource|ephemeral)/));
   if (resourceLineIndex < 0) {
     throw Error(`Resource block cannot be found for resource '${name}'.`);
   }
@@ -38559,11 +38560,13 @@ function internalRenderPlan(structuredPlan, humanReadablePlan) {
     (r) => r.change.actions.toString() === ["delete", "create"].toString() || r.change.actions.toString() === ["create", "delete"].toString()
   ).map((r) => r.address);
   const deletedResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["delete"].toString()).map((r) => r.address);
+  const ephemeralResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["open"].toString()).map((r) => r.address);
   return {
     createdResources: extractResources(createdResources, humanReadablePlan),
     updatedResources: extractResources(updatedResources, humanReadablePlan),
     recreatedResources: extractResources(recreatedResources, humanReadablePlan),
-    deletedResources: extractResources(deletedResources, humanReadablePlan)
+    deletedResources: extractResources(deletedResources, humanReadablePlan),
+    ephemeralResources: extractResources(ephemeralResources, humanReadablePlan)
   };
 }
 async function renderPlan({
@@ -38599,7 +38602,7 @@ function renderBody(plan) {
   if (planIsEmpty(plan)) {
     return "**\u2192 No Resource Changes!**";
   }
-  let body = `**\u2192 Resource Changes: ${Object.keys(plan.createdResources ?? {}).length} to create, ${Object.keys(plan.updatedResources ?? {}).length} to update, ${Object.keys(plan.recreatedResources ?? {}).length} to re-create, ${Object.keys(plan.deletedResources ?? {}).length} to delete.**`;
+  let body = `**\u2192 Resource Changes: ${Object.keys(plan.createdResources ?? {}).length} to create, ${Object.keys(plan.updatedResources ?? {}).length} to update, ${Object.keys(plan.recreatedResources ?? {}).length} to re-create, ${Object.keys(plan.deletedResources ?? {}).length} to delete, ${Object.keys(plan.ephemeralResources ?? {}).length} ephemeral.**`;
   if (plan.createdResources) {
     body += "\n\n### \u2728 Create";
     body += renderResources(plan.createdResources);
@@ -38615,6 +38618,10 @@ function renderBody(plan) {
   if (plan.deletedResources) {
     body += "\n\n### \u{1F5D1}\uFE0F Delete";
     body += renderResources(plan.deletedResources);
+  }
+  if (plan.ephemeralResources) {
+    body += "\n\n### \u{1F47B} Ephemeral";
+    body += renderResources(plan.ephemeralResources);
   }
   return body;
 }

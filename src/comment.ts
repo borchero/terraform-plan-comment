@@ -22,7 +22,8 @@ function renderBody(plan: RenderedPlan): string {
     `${Object.keys(plan.createdResources ?? {}).length} to create, ` +
     `${Object.keys(plan.updatedResources ?? {}).length} to update, ` +
     `${Object.keys(plan.recreatedResources ?? {}).length} to re-create, ` +
-    `${Object.keys(plan.deletedResources ?? {}).length} to delete.**`
+    `${Object.keys(plan.deletedResources ?? {}).length} to delete, ` +
+    `${Object.keys(plan.ephemeralResources ?? {}).length} ephemeral.**`
 
   if (plan.createdResources) {
     body += '\n\n### ✨ Create'
@@ -39,6 +40,10 @@ function renderBody(plan: RenderedPlan): string {
   if (plan.deletedResources) {
     body += '\n\n### 🗑️ Delete'
     body += renderResources(plan.deletedResources)
+  }
+  if (plan.ephemeralResources) {
+    body += '\n\n### 👻 Ephemeral'
+    body += renderResources(plan.ephemeralResources)
   }
 
   return body

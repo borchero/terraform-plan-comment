@@ -7,6 +7,7 @@ export type RenderedPlan = {
   updatedResources?: Record<string, string>
   recreatedResources?: Record<string, string>
   deletedResources?: Record<string, string>
+  ephemeralResources?: Record<string, string>
 }
 
 export function planIsEmpty(plan: RenderedPlan): boolean {
@@ -14,7 +15,8 @@ export function planIsEmpty(plan: RenderedPlan): boolean {
     !plan.createdResources &&
     !plan.recreatedResources &&
     !plan.updatedResources &&
-    !plan.deletedResources
+    !plan.deletedResources &&
+    !plan.ephemeralResources
   )
 }
 
@@ -33,7 +35,7 @@ function extractResourceContent(name: string, humanReadablePlan: string): Resour
   }
   let resourceLineIndex = lines
     .slice(resourceHeaderIndex)
-    .findIndex((line) => line.match(/.*[+-~] resource/))
+    .findIndex((line) => line.match(/.*[+-~⇄] (resource|ephemeral)/))
   if (resourceLineIndex < 0) {
     throw Error(`Resource block cannot be found for resource '${name}'.`)
   }
@@ -129,12 +131,16 @@ export function internalRenderPlan(
   const deletedResources = structuredPlan.resource_changes
     .filter((r) => r.change.actions.toString() === ['delete'].toString())
     .map((r) => r.address)
+  const ephemeralResources = structuredPlan.resource_changes
+    .filter((r) => r.change.actions.toString() === ['open'].toString())
+    .map((r) => r.address)
 
   return {
     createdResources: extractResources(createdResources, humanReadablePlan),
     updatedResources: extractResources(updatedResources, humanReadablePlan),
     recreatedResources: extractResources(recreatedResources, humanReadablePlan),
-    deletedResources: extractResources(deletedResources, humanReadablePlan)
+    deletedResources: extractResources(deletedResources, humanReadablePlan),
+    ephemeralResources: extractResources(ephemeralResources, humanReadablePlan)
   }
 }
 

@@ -22,7 +22,8 @@ function renderBody(plan: RenderedPlan): string {
     `${Object.keys(plan.createdResources ?? {}).length} to create, ` +
     `${Object.keys(plan.updatedResources ?? {}).length} to update, ` +
     `${Object.keys(plan.recreatedResources ?? {}).length} to re-create, ` +
-    `${Object.keys(plan.deletedResources ?? {}).length} to delete.**`
+    `${Object.keys(plan.deletedResources ?? {}).length} to delete, ` +
+    `${Object.keys(plan.ephemeralResources ?? {}).length} ephemeral.**`
 
   if (plan.createdResources) {
     body += '\n\n### ✨ Create'
@@ -39,6 +40,10 @@ function renderBody(plan: RenderedPlan): string {
   if (plan.deletedResources) {
     body += '\n\n### 🗑️ Delete'
     body += renderResources(plan.deletedResources)
+  }
+  if (plan.ephemeralResources) {
+    body += '\n\n### 👻 Ephemeral'
+    body += renderResources(plan.ephemeralResources)
   }
 
   return body
@@ -71,16 +76,21 @@ export function renderMarkdown({
 
 export async function createOrUpdateComment({
   octokit,
-  content
+  content,
+  prNumber
 }: {
   octokit: InstanceType<typeof GitHub>
   content: string
+  prNumber?: number
 }): Promise<void> {
+  // Use provided PR number or fall back to context
+  const issueNumber = prNumber ?? github.context.issue.number
+
   // Get all PR comments
   const comments = await octokit.paginate(octokit.rest.issues.listComments, {
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
-    issue_number: github.context.issue.number
+    issue_number: issueNumber
   })
 
   // Check if any comment already starts with the header that we expect. If so,
@@ -102,7 +112,36 @@ export async function createOrUpdateComment({
   await octokit.rest.issues.createComment({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
-    issue_number: github.context.issue.number,
+    issue_number: issueNumber,
     body: content
   })
+}
+
+export async function deleteComment({
+  octokit,
+  header
+}: {
+  octokit: InstanceType<typeof GitHub>
+  header: string
+}): Promise<boolean> {
+  // Get all PR comments
+  const comments = await octokit.paginate(octokit.rest.issues.listComments, {
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    issue_number: github.context.issue.number
+  })
+
+  // Find and delete any comment that starts with the expected header
+  for (const comment of comments) {
+    if (comment.body?.startsWith(header)) {
+      await octokit.rest.issues.deleteComment({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        comment_id: comment.id
+      })
+      return true
+    }
+  }
+
+  return false
 }

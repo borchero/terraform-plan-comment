@@ -1,10 +1,11 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { createOrUpdateComment, renderMarkdown } from './comment'
+import { createOrUpdateComment, deleteComment, renderMarkdown } from './comment'
 import { planIsEmpty, renderPlan } from './render'
 
 async function run() {
   // 1) Setup
+  const prNumberInput = core.getInput('pr-number', { required: false })
   const inputs = {
     token: core.getInput('token', { required: true }),
     planfile: core.getInput('planfile', { required: true }),
@@ -12,7 +13,8 @@ async function run() {
     workingDirectory: core.getInput('working-directory', { required: true }),
     header: core.getInput('header', { required: true }),
     skipEmpty: core.getBooleanInput('skip-empty', { required: true }),
-    skipComment: core.getBooleanInput('skip-comment', { required: true })
+    skipComment: core.getBooleanInput('skip-comment', { required: true }),
+    prNumber: prNumberInput && prNumberInput !== '' ? parseInt(prNumberInput, 10) : undefined
   }
   const octokit = github.getOctokit(inputs.token)
 
@@ -38,15 +40,22 @@ async function run() {
     await core.summary.addRaw(planMarkdown).write()
   })
 
-  if (
+  // Determine if we should post a comment
+  const shouldPostComment =
     !inputs.skipComment &&
-    (!inputs.skipEmpty || !planIsEmpty(plan)) &&
-    ['pull_request', 'pull_request_target'].includes(github.context.eventName)
-  ) {
-    // 5) Post comment with markdown (if applicable)
-    await core.group('Render comment', () => {
-      return createOrUpdateComment({ octokit, content: planMarkdown })
-    })
+    (inputs.prNumber || ['pull_request', 'pull_request_target'].includes(github.context.eventName))
+  if (shouldPostComment) {
+    if (!inputs.skipEmpty || !planIsEmpty(plan)) {
+      // 5) Post comment with markdown (if applicable)
+      await core.group('Render comment', () => {
+        return createOrUpdateComment({ octokit, content: planMarkdown })
+      })
+    } else {
+      // 6) Delete existing comment if plan is empty and skip-empty is enabled
+      await core.group('Delete outdated comment', () => {
+        return deleteComment({ octokit, header: `## ${inputs.header}` })
+      })
+    }
   }
 }
 

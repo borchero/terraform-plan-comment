@@ -17,27 +17,26 @@
     "@actions/core": "^1.11.1",
     "@actions/exec": "^1.1.1",
     "@actions/github": "^6.0.1",
-    "semver": "^7.7.1",
-    "zod": "^4.1.11"
+    "semver": "^7.7.3",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
     "@octokit/webhooks-schemas": "^7.6.1",
     "@octokit/webhooks-types": "^7.6.1",
     "@types/jest": "^30.0.0",
     "@types/semver": "^7.7.1",
-    "@typescript-eslint/eslint-plugin": "^8.45.0",
-    "@typescript-eslint/parser": "^8.45.0",
-    "eslint": "9.36.0",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-config-standard": "^17.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.4",
+    "@typescript-eslint/parser": "^8.46.4",
+    "eslint": "^9.39.1",
     "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-n": "17.23.1",
+    "eslint-plugin-n": "^17.23.1",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-promise": "^7.2.1",
     "jest": "^30.2.0",
     "prettier": "^3.6.2",
-    "ts-jest": "^29.4.4",
-    "tsup": "^8.4.0",
+    "ts-jest": "^29.4.5",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   }
 }

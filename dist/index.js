@@ -38577,13 +38577,14 @@ async function renderPlan({
 }
 
 // src/comment.ts
-function renderResources(resources) {
+function renderResources(resources, options) {
   let result = "";
   for (const key of Object.keys(resources).sort()) {
     const content = resources[key];
+    const openAttr = options.expandDetails ? " open" : "";
     result += `
 
-<details><summary><code>${key}</code></summary>
+<details${openAttr}><summary><code>${key}</code></summary>
 
 ${content}
 
@@ -38591,39 +38592,40 @@ ${content}
   }
   return result;
 }
-function renderBody(plan) {
+function renderBody(plan, options) {
   if (planIsEmpty(plan)) {
     return "**\u2192 No Resource Changes!**";
   }
   let body = `**\u2192 Resource Changes: ${Object.keys(plan.createdResources ?? {}).length} to create, ${Object.keys(plan.updatedResources ?? {}).length} to update, ${Object.keys(plan.recreatedResources ?? {}).length} to re-create, ${Object.keys(plan.deletedResources ?? {}).length} to delete, ${Object.keys(plan.ephemeralResources ?? {}).length} ephemeral.**`;
   if (plan.createdResources) {
     body += "\n\n### \u2728 Create";
-    body += renderResources(plan.createdResources);
+    body += renderResources(plan.createdResources, options);
   }
   if (plan.updatedResources) {
     body += "\n\n### \u267B\uFE0F Update";
-    body += renderResources(plan.updatedResources);
+    body += renderResources(plan.updatedResources, options);
   }
   if (plan.recreatedResources) {
     body += "\n\n### \u2699\uFE0F Re-Create";
-    body += renderResources(plan.recreatedResources);
+    body += renderResources(plan.recreatedResources, options);
   }
   if (plan.deletedResources) {
     body += "\n\n### \u{1F5D1}\uFE0F Delete";
-    body += renderResources(plan.deletedResources);
+    body += renderResources(plan.deletedResources, options);
   }
   if (plan.ephemeralResources) {
     body += "\n\n### \u{1F47B} Ephemeral";
-    body += renderResources(plan.ephemeralResources);
+    body += renderResources(plan.ephemeralResources, options);
   }
   return body;
 }
 function renderMarkdown({
   plan,
   header,
-  includeFooter
+  includeFooter,
+  expandDetails
 }) {
-  const body = renderBody(plan);
+  const body = renderBody(plan, { expandDetails });
   let footer = "";
   if (includeFooter === void 0 || includeFooter === true) {
     footer = `
@@ -38703,7 +38705,8 @@ async function run() {
     header: core.getInput("header", { required: true }),
     skipEmpty: core.getBooleanInput("skip-empty", { required: true }),
     skipComment: core.getBooleanInput("skip-comment", { required: true }),
-    prNumber: prNumberInput && prNumberInput !== "" ? parseInt(prNumberInput, 10) : void 0
+    prNumber: prNumberInput && prNumberInput !== "" ? parseInt(prNumberInput, 10) : void 0,
+    expandComment: core.getBooleanInput("expand-comment", { required: true })
   };
   const octokit = github2.getOctokit(inputs.token);
   const plan = await core.group(
@@ -38715,7 +38718,11 @@ async function run() {
     })
   );
   const planMarkdown = await core.group("Render plan diff markdown", async () => {
-    const markdown = renderMarkdown({ plan, header: inputs.header });
+    const markdown = renderMarkdown({
+      plan,
+      header: inputs.header,
+      expandDetails: inputs.expandComment
+    });
     core.setOutput("markdown", markdown);
     core.setOutput("empty", planIsEmpty(plan));
     return markdown;

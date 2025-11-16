@@ -14,7 +14,8 @@ async function run() {
     header: core.getInput('header', { required: true }),
     skipEmpty: core.getBooleanInput('skip-empty', { required: true }),
     skipComment: core.getBooleanInput('skip-comment', { required: true }),
-    prNumber: prNumberInput && prNumberInput !== '' ? parseInt(prNumberInput, 10) : undefined
+    prNumber: prNumberInput && prNumberInput !== '' ? parseInt(prNumberInput, 10) : undefined,
+    expandComment: core.getBooleanInput('expand-comment', { required: true })
   }
   const octokit = github.getOctokit(inputs.token)
 
@@ -29,7 +30,11 @@ async function run() {
 
   // 3) Render the plan diff markdown and set it as output
   const planMarkdown = await core.group('Render plan diff markdown', async () => {
-    const markdown = renderMarkdown({ plan, header: inputs.header })
+    const markdown = renderMarkdown({
+      plan,
+      header: inputs.header,
+      expandDetails: inputs.expandComment
+    })
     core.setOutput('markdown', markdown)
     core.setOutput('empty', planIsEmpty(plan))
     return markdown

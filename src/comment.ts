@@ -3,16 +3,20 @@ import * as github from '@actions/github'
 import type { PullRequestEvent } from '@octokit/webhooks-types'
 import { planIsEmpty, type RenderedPlan } from './render'
 
-function renderResources(resources: Record<string, string>): string {
+function renderResources(
+  resources: Record<string, string>,
+  options: { expandDetails: boolean }
+): string {
   let result = ''
   for (const key of Object.keys(resources).sort()) {
     const content = resources[key]
-    result += `\n\n<details><summary><code>${key}</code></summary>\n\n${content}\n\n</details>`
+    const openAttr = options.expandDetails ? ' open' : ''
+    result += `\n\n<details${openAttr}><summary><code>${key}</code></summary>\n\n${content}\n\n</details>`
   }
   return result
 }
 
-function renderBody(plan: RenderedPlan): string {
+function renderBody(plan: RenderedPlan, options: { expandDetails: boolean }): string {
   if (planIsEmpty(plan)) {
     return '**→ No Resource Changes!**'
   }
@@ -27,23 +31,23 @@ function renderBody(plan: RenderedPlan): string {
 
   if (plan.createdResources) {
     body += '\n\n### ✨ Create'
-    body += renderResources(plan.createdResources)
+    body += renderResources(plan.createdResources, options)
   }
   if (plan.updatedResources) {
     body += '\n\n### ♻️ Update'
-    body += renderResources(plan.updatedResources)
+    body += renderResources(plan.updatedResources, options)
   }
   if (plan.recreatedResources) {
     body += '\n\n### ⚙️ Re-Create'
-    body += renderResources(plan.recreatedResources)
+    body += renderResources(plan.recreatedResources, options)
   }
   if (plan.deletedResources) {
     body += '\n\n### 🗑️ Delete'
-    body += renderResources(plan.deletedResources)
+    body += renderResources(plan.deletedResources, options)
   }
   if (plan.ephemeralResources) {
     body += '\n\n### 👻 Ephemeral'
-    body += renderResources(plan.ephemeralResources)
+    body += renderResources(plan.ephemeralResources, options)
   }
 
   return body
@@ -52,14 +56,16 @@ function renderBody(plan: RenderedPlan): string {
 export function renderMarkdown({
   plan,
   header,
-  includeFooter
+  includeFooter,
+  expandDetails
 }: {
   plan: RenderedPlan
   header: string
   includeFooter?: boolean
+  expandDetails: boolean
 }): string {
   // Build body
-  const body = renderBody(plan)
+  const body = renderBody(plan, { expandDetails })
 
   // Build footer
   let footer = ''

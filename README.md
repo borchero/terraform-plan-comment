@@ -71,6 +71,9 @@ GitHub Action to post the output of `terraform plan` to a pull request comment.
     # Pull request number to post the comment to (Optional)
     # Useful for workflow_dispatch triggers where PR context is not automatically available
     pr-number: ""
+
+    # Expand the PR comment details
+    expand-comment: false
 ```
 
 ### `token` (required)
@@ -108,7 +111,8 @@ multiple Terraform runs: each sticky pull request comment is identified by its h
 
 Whether to skip posting a pull request comment when no changes need to be performed. Defaults to `false`.
 
-When enabled and the plan is empty, any existing comment from a previous commit will be automatically deleted to avoid showing outdated information.
+When enabled and the plan is empty, any existing comment from a previous commit will be automatically deleted to avoid
+showing outdated information.
 
 ### `skip-comment`
 
@@ -122,6 +126,11 @@ the PR number from the event context (available for `pull_request` and `pull_req
 
 This parameter is particularly useful for `workflow_dispatch` triggers or other non-PR events where you want to post a
 comment to a specific pull request. You can use a previous step to find the PR number associated with your branch.
+
+### `expand-comment`
+
+Whether to expand the comment details. When enabled, the detail points in the pull request comment are expanded by
+default.
 
 ## Outputs
 

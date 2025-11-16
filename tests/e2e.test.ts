@@ -18,7 +18,8 @@ test.each([
   const renderedMarkdown = renderMarkdown({
     plan: renderedPlan,
     header: '📝 Terraform Plan',
-    includeFooter: false
+    includeFooter: false,
+    expandDetails: false
   })
 
   if (process.env.GENERATE_FIXTURE === '1') {

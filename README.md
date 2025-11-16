@@ -108,6 +108,8 @@ multiple Terraform runs: each sticky pull request comment is identified by its h
 
 Whether to skip posting a pull request comment when no changes need to be performed. Defaults to `false`.
 
+When enabled and the plan is empty, any existing comment from a previous commit will be automatically deleted to avoid showing outdated information.
+
 ### `skip-comment`
 
 Whether to skip posting a pull request comment entirely. When enabled, the plan will still be available in the step

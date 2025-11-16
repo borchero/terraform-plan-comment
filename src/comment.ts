@@ -116,3 +116,32 @@ export async function createOrUpdateComment({
     body: content
   })
 }
+
+export async function deleteComment({
+  octokit,
+  header
+}: {
+  octokit: InstanceType<typeof GitHub>
+  header: string
+}): Promise<boolean> {
+  // Get all PR comments
+  const comments = await octokit.paginate(octokit.rest.issues.listComments, {
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    issue_number: github.context.issue.number
+  })
+
+  // Find and delete any comment that starts with the expected header
+  for (const comment of comments) {
+    if (comment.body?.startsWith(header)) {
+      await octokit.rest.issues.deleteComment({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        comment_id: comment.id
+      })
+      return true
+    }
+  }
+
+  return false
+}

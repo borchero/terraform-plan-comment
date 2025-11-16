@@ -44,8 +44,7 @@ async function run() {
   const shouldPostComment =
     !inputs.skipComment &&
     (!inputs.skipEmpty || !planIsEmpty(plan)) &&
-    (inputs.prNumber ||
-      ['pull_request', 'pull_request_target'].includes(github.context.eventName))
+    (inputs.prNumber || ['pull_request', 'pull_request_target'].includes(github.context.eventName))
 
   if (shouldPostComment) {
     // 5) Post comment with markdown (if applicable)

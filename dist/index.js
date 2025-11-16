@@ -38571,15 +38571,12 @@ async function renderPlan({
     cwd: workingDirectory,
     silent: true
   };
-  const structuredPlanfile = await exec.getExecOutput(terraformCommand, ['show', '-json', planfile], options)
-    .then(function (output) {
-        var jsonStart = output.stdout.indexOf('{');
-        if (jsonStart === -1)
-            throw new Error('No JSON found in planfile output');
-        var jsonText = output.stdout.slice(jsonStart);
-        return JSON.parse(jsonText);
-    })
-    .then(function (json) { return parsePlanfileJSON(json); });
+  const structuredPlanfile = await exec.getExecOutput(terraformCommand, ["show", "-json", planfile], options).then((output) => {
+    const jsonStart = output.stdout.indexOf("{");
+    if (jsonStart === -1) throw new Error("No JSON found in planfile output");
+    const jsonText = output.stdout.slice(jsonStart);
+    return JSON.parse(jsonText);
+  }).then((json2) => parsePlanfileJSON(json2));
   const humanReadablePlanfile = await exec.getExecOutput(terraformCommand, ["show", "-no-color", planfile], options).then((output) => output.stdout);
   return internalRenderPlan(structuredPlanfile, humanReadablePlanfile);
 }

@@ -4,37 +4,51 @@ repos:
     hooks:
       - id: test:fixtures
         name: test:fixtures
-        entry: pnpm test:fixtures
+        entry: pixi run -e pre-commit pnpm test:fixtures
         language: system
         pass_filenames: false
         always_run: true
       - id: lint
         name: lint
-        entry: pnpm lint:fix
+        entry: pixi run -e pre-commit pnpm lint:fix
         language: system
         pass_filenames: false
         types: [file, ts]
       - id: build
         name: build
-        entry: pnpm build
+        entry: pixi run -e pre-commit pnpm build
         language: system
         pass_filenames: false
         always_run: true
       - id: prettier
         name: prettier
-        entry: pnpm prettier
+        entry: pixi run -e pre-commit pnpm prettier --write
         language: system
-        pass_filenames: false
-        types_or: [markdown, yaml]
-  - repo: https://github.com/crate-ci/typos
-    rev: v1.19.0
-    hooks:
+        types: [markdown, yaml]
       - id: typos
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-      - id: check-merge-conflict
+        name: typos
+        entry: pixi run -e pre-commit typos --force-exclude
+        language: system
+        types: [text]
+        require_serial: true
+      - id: trailing-whitespace-fixer
+        name: trailing-whitespace-fixer
+        entry: pixi run -e pre-commit trailing-whitespace-fixer
+        language: system
+        types: [text]
       - id: end-of-file-fixer
+        name: end-of-file-fixer
+        entry: pixi run -e pre-commit end-of-file-fixer
+        language: system
+        types: [text]
         exclude: ^tests/.*/rendered.md$
+      - id: check-merge-conflict
+        name: check-merge-conflict
+        entry: pixi run -e pre-commit check-merge-conflict --assume-in-merge
+        language: system
+        types: [text]
       - id: mixed-line-ending
-      - id: trailing-whitespace
+        name: mixed-line-ending
+        entry: pixi run -e pre-commit mixed-line-ending
+        language: system
+        types: [text]

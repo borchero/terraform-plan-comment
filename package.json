@@ -18,7 +18,7 @@
     "@actions/exec": "^1.1.1",
     "@actions/github": "^6.0.1",
     "semver": "^7.7.3",
-    "zod": "^4.1.12"
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -26,16 +26,16 @@
     "@octokit/webhooks-types": "^7.6.1",
     "@types/jest": "^30.0.0",
     "@types/semver": "^7.7.1",
-    "@typescript-eslint/eslint-plugin": "^8.46.4",
-    "@typescript-eslint/parser": "^8.46.4",
+    "@typescript-eslint/eslint-plugin": "^8.48.0",
+    "@typescript-eslint/parser": "^8.48.0",
     "eslint": "^9.39.1",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-n": "^17.23.1",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-promise": "^7.2.1",
     "jest": "^30.2.0",
-    "prettier": "^3.6.2",
-    "ts-jest": "^29.4.5",
+    "prettier": "^3.7.3",
+    "ts-jest": "^29.4.6",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   }

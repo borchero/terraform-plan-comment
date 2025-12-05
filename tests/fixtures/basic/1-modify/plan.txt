@@ -18,4 +18,27 @@ Terraform will perform the following actions:
         # (3 unchanged attributes hidden)
     }
 
-Plan: 1 to add, 0 to change, 1 to destroy.
+  # local_file.test3 must be replaced
+-/+ resource "local_file" "test3" {
+      ~ content              = <<-EOT # forces replacement
+          + just a line
+          +   - just a line with hyphen
+          +     + just a line with plus sign
+            normal line
+              - line with hyphen
+                + line with plus sign
+          - normal line
+          -   - line with hyphen
+          -     + line with plus sign
+        EOT
+      ~ content_base64sha256 = "i6WqvHPC6ZjygE/WNi8GaFoWXCAxsscdX/wytuFL3Jg=" -> (known after apply)
+      ~ content_base64sha512 = "dtbccmPsKzWw02pCkvJZ1EntGt6yNsS9sd8dwhhlHmtPfw5r5MlVoYrMgo2G9iP3S175gLv2bT+WYLF5ZqIUbQ==" -> (known after apply)
+      ~ content_md5          = "aeb7a1c5d4e21f4ef5977c3ffecdb5d4" -> (known after apply)
+      ~ content_sha1         = "9b900384cf991dcf2b4b5d24ffc31aead814a9f2" -> (known after apply)
+      ~ content_sha256       = "8ba5aabc73c2e998f2804fd6362f06685a165c2031b2c71d5ffc32b6e14bdc98" -> (known after apply)
+      ~ content_sha512       = "76d6dc7263ec2b35b0d36a4292f259d449ed1adeb236c4bdb1df1dc218651e6b4f7f0e6be4c955a18acc828d86f623f74b5ef980bbf66d3f9660b17966a2146d" -> (known after apply)
+      ~ id                   = "9b900384cf991dcf2b4b5d24ffc31aead814a9f2" -> (known after apply)
+        # (3 unchanged attributes hidden)
+    }
+
+Plan: 2 to add, 0 to change, 2 to destroy.

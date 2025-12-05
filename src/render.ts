@@ -68,7 +68,7 @@ function formatResourceContent(content: ResourceContent): string {
   // the front.
   const diffSuitable = aligned.map((line) => {
     const matches = line.match(/^( +)([+-~])( .*)$/)
-    if (matches?.length === 4) {
+    if (matches?.length === 4 && matches[1].length === 4) {
       return matches[2] + matches[1] + matches[3]
     }
     return line

@@ -38739,7 +38739,7 @@ async function run() {
   if (shouldPostComment) {
     if (!inputs.skipEmpty || !planIsEmpty(plan)) {
       await core.group("Render comment", () => {
-        return createOrUpdateComment({ octokit, content: planMarkdown });
+        return createOrUpdateComment({ octokit, content: planMarkdown, prNumber: inputs.prNumber });
       });
     } else {
       await core.group("Delete outdated comment", () => {

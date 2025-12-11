@@ -53,7 +53,7 @@ async function run() {
     if (!inputs.skipEmpty || !planIsEmpty(plan)) {
       // 5) Post comment with markdown (if applicable)
       await core.group('Render comment', () => {
-        return createOrUpdateComment({ octokit, content: planMarkdown })
+        return createOrUpdateComment({ octokit, content: planMarkdown, prNumber: inputs.prNumber })
       })
     } else {
       // 6) Delete existing comment if plan is empty and skip-empty is enabled

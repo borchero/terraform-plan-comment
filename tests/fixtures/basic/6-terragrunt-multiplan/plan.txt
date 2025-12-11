@@ -1,0 +1,61 @@
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+Terraform will perform the following actions:
+  # local_file.cache will be created
+  + resource "local_file" "cache" {
+      + content              = (sensitive value)
+      + content_base64sha256 = (known after apply)
+      + content_base64sha512 = (known after apply)
+      + content_md5          = (known after apply)
+      + content_sha1         = (known after apply)
+      + content_sha256       = (known after apply)
+      + content_sha512       = (known after apply)
+      + directory_permission = "0777"
+      + file_permission      = "0777"
+      + filename             = "../test.txt"
+      + id                   = (known after apply)
+    }
+Plan: 1 to add, 0 to change, 0 to destroy.
+Changes to Outputs:
+  + cache_name = "../test.txt"
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+Terraform will perform the following actions:
+  # local_file.database will be created
+  + resource "local_file" "database" {
+      + content              = (sensitive value)
+      + content_base64sha256 = (known after apply)
+      + content_base64sha512 = (known after apply)
+      + content_md5          = (known after apply)
+      + content_sha1         = (known after apply)
+      + content_sha256       = (known after apply)
+      + content_sha512       = (known after apply)
+      + directory_permission = "0777"
+      + file_permission      = "0777"
+      + filename             = "../test.txt"
+      + id                   = (known after apply)
+    }
+Plan: 1 to add, 0 to change, 0 to destroy.
+Changes to Outputs:
+  + database_name = "../test.txt"
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+Terraform will perform the following actions:
+  # local_file.server will be created
+  + resource "local_file" "server" {
+      + content              = (sensitive value)
+      + content_base64sha256 = (known after apply)
+      + content_base64sha512 = (known after apply)
+      + content_md5          = (known after apply)
+      + content_sha1         = (known after apply)
+      + content_sha256       = (known after apply)
+      + content_sha512       = (known after apply)
+      + directory_permission = "0777"
+      + file_permission      = "0777"
+      + filename             = "../test.txt"
+      + id                   = (known after apply)
+    }
+Plan: 1 to add, 0 to change, 0 to destroy.

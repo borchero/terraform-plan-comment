@@ -1,7 +1,7 @@
 [workspace]
 channels = ["conda-forge"]
 name = "terraform-plan-comment"
-platforms = ["linux-64", "osx-arm64"]
+platforms = ["linux-64", "osx-64", "osx-arm64"]
 requires-pixi = ">=0.58"
 
 [dependencies]
@@ -16,7 +16,14 @@ typos = "*"
 [feature.terraform.dependencies]
 terraform = "*"
 
+[feature.terragrunt.target.osx-64.dependencies]
+terragrunt = "*"
+
+[feature.terragrunt.target.linux-64.dependencies]
+terragrunt = "*"
+
 [environments]
-default = ["pre-commit", "terraform"]
-pre-commit = ["pre-commit", "terraform"]
+default = ["pre-commit", "terraform", "terragrunt"]
+pre-commit = ["pre-commit", "terraform", "terragrunt"]
 terraform = ["terraform"]
+terragrunt = ["terragrunt"]

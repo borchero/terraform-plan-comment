@@ -55,6 +55,24 @@
           "sensitive_values": {
             "sensitive_content": true
           }
+        },
+        {
+          "address": "local_file.test3",
+          "mode": "managed",
+          "type": "local_file",
+          "name": "test3",
+          "provider_name": "registry.terraform.io/hashicorp/local",
+          "schema_version": 0,
+          "values": {
+            "content": "just a line\n  - just a line with hyphen\n    + just a line with plus sign\nnormal line\n  - line with hyphen\n    + line with plus sign\n",
+            "content_base64": null,
+            "directory_permission": "0777",
+            "file_permission": "0777",
+            "filename": "../test3.txt",
+            "sensitive_content": null,
+            "source": null
+          },
+          "sensitive_values": {}
         }
       ]
     }
@@ -171,6 +189,65 @@
           "sensitive_content": true
         }
       }
+    },
+    {
+      "address": "local_file.test3",
+      "mode": "managed",
+      "type": "local_file",
+      "name": "test3",
+      "provider_name": "registry.terraform.io/hashicorp/local",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "content": "normal line\n  - line with hyphen\n    + line with plus sign\nnormal line\n  - line with hyphen\n    + line with plus sign\n",
+          "content_base64": null,
+          "content_base64sha256": "i6WqvHPC6ZjygE/WNi8GaFoWXCAxsscdX/wytuFL3Jg=",
+          "content_base64sha512": "dtbccmPsKzWw02pCkvJZ1EntGt6yNsS9sd8dwhhlHmtPfw5r5MlVoYrMgo2G9iP3S175gLv2bT+WYLF5ZqIUbQ==",
+          "content_md5": "aeb7a1c5d4e21f4ef5977c3ffecdb5d4",
+          "content_sha1": "9b900384cf991dcf2b4b5d24ffc31aead814a9f2",
+          "content_sha256": "8ba5aabc73c2e998f2804fd6362f06685a165c2031b2c71d5ffc32b6e14bdc98",
+          "content_sha512": "76d6dc7263ec2b35b0d36a4292f259d449ed1adeb236c4bdb1df1dc218651e6b4f7f0e6be4c955a18acc828d86f623f74b5ef980bbf66d3f9660b17966a2146d",
+          "directory_permission": "0777",
+          "file_permission": "0777",
+          "filename": "../test3.txt",
+          "id": "9b900384cf991dcf2b4b5d24ffc31aead814a9f2",
+          "sensitive_content": null,
+          "source": null
+        },
+        "after": {
+          "content": "just a line\n  - just a line with hyphen\n    + just a line with plus sign\nnormal line\n  - line with hyphen\n    + line with plus sign\n",
+          "content_base64": null,
+          "directory_permission": "0777",
+          "file_permission": "0777",
+          "filename": "../test3.txt",
+          "sensitive_content": null,
+          "source": null
+        },
+        "after_unknown": {
+          "content_base64sha256": true,
+          "content_base64sha512": true,
+          "content_md5": true,
+          "content_sha1": true,
+          "content_sha256": true,
+          "content_sha512": true,
+          "id": true
+        },
+        "before_sensitive": {
+          "sensitive_content": true
+        },
+        "after_sensitive": {
+          "sensitive_content": true
+        },
+        "replace_paths": [
+          [
+            "content"
+          ]
+        ]
+      },
+      "action_reason": "replace_because_cannot_update"
     }
   ],
   "prior_state": {
@@ -233,6 +310,33 @@
             "sensitive_values": {
               "sensitive_content": true
             }
+          },
+          {
+            "address": "local_file.test3",
+            "mode": "managed",
+            "type": "local_file",
+            "name": "test3",
+            "provider_name": "registry.terraform.io/hashicorp/local",
+            "schema_version": 0,
+            "values": {
+              "content": "normal line\n  - line with hyphen\n    + line with plus sign\nnormal line\n  - line with hyphen\n    + line with plus sign\n",
+              "content_base64": null,
+              "content_base64sha256": "i6WqvHPC6ZjygE/WNi8GaFoWXCAxsscdX/wytuFL3Jg=",
+              "content_base64sha512": "dtbccmPsKzWw02pCkvJZ1EntGt6yNsS9sd8dwhhlHmtPfw5r5MlVoYrMgo2G9iP3S175gLv2bT+WYLF5ZqIUbQ==",
+              "content_md5": "aeb7a1c5d4e21f4ef5977c3ffecdb5d4",
+              "content_sha1": "9b900384cf991dcf2b4b5d24ffc31aead814a9f2",
+              "content_sha256": "8ba5aabc73c2e998f2804fd6362f06685a165c2031b2c71d5ffc32b6e14bdc98",
+              "content_sha512": "76d6dc7263ec2b35b0d36a4292f259d449ed1adeb236c4bdb1df1dc218651e6b4f7f0e6be4c955a18acc828d86f623f74b5ef980bbf66d3f9660b17966a2146d",
+              "directory_permission": "0777",
+              "file_permission": "0777",
+              "filename": "../test3.txt",
+              "id": "9b900384cf991dcf2b4b5d24ffc31aead814a9f2",
+              "sensitive_content": null,
+              "source": null
+            },
+            "sensitive_values": {
+              "sensitive_content": true
+            }
           }
         ]
       }
@@ -277,6 +381,22 @@
             },
             "filename": {
               "constant_value": "../test2.txt"
+            }
+          },
+          "schema_version": 0
+        },
+        {
+          "address": "local_file.test3",
+          "mode": "managed",
+          "type": "local_file",
+          "name": "test3",
+          "provider_config_key": "local",
+          "expressions": {
+            "content": {
+              "constant_value": "just a line\n  - just a line with hyphen\n    + just a line with plus sign\nnormal line\n  - line with hyphen\n    + line with plus sign\n"
+            },
+            "filename": {
+              "constant_value": "../test3.txt"
             }
           },
           "schema_version": 0

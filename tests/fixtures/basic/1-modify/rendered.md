@@ -1,6 +1,6 @@
 ## 📝 Terraform Plan
 
-**→ Resource Changes: 0 to create, 0 to update, 1 to re-create, 0 to delete, 0 ephemeral.**
+**→ Resource Changes: 0 to create, 0 to update, 2 to re-create, 0 to delete, 0 ephemeral.**
 
 ### ⚙️ Re-Create
 
@@ -15,6 +15,32 @@
 ! content_sha256       = "fe5598eb803e6d6da696ba0baaacec2056e51ea79a5f1b952e98e3ea79cf6ce4" -> (known after apply)
 ! content_sha512       = "16447666e5a2851a82152b469fffa74d7a227a6593de344a64de76b0f113b0056fb029d212d732963dbf8370d91c7ef601422421efcb5d5d31191433872f7a09" -> (known after apply)
 ! id                   = "a9e61004a1ffc8f676b68225a06bb082677aeb89" -> (known after apply)
+  # (3 unchanged attributes hidden)
+```
+
+</details>
+
+<details><summary><code>local_file.test3</code></summary>
+
+```diff
+! content              = <<-EOT # forces replacement
++     just a line
++       - just a line with hyphen
++         + just a line with plus sign
+      normal line
+        - line with hyphen
+          + line with plus sign
+-     normal line
+-       - line with hyphen
+-         + line with plus sign
+  EOT
+! content_base64sha256 = "i6WqvHPC6ZjygE/WNi8GaFoWXCAxsscdX/wytuFL3Jg=" -> (known after apply)
+! content_base64sha512 = "dtbccmPsKzWw02pCkvJZ1EntGt6yNsS9sd8dwhhlHmtPfw5r5MlVoYrMgo2G9iP3S175gLv2bT+WYLF5ZqIUbQ==" -> (known after apply)
+! content_md5          = "aeb7a1c5d4e21f4ef5977c3ffecdb5d4" -> (known after apply)
+! content_sha1         = "9b900384cf991dcf2b4b5d24ffc31aead814a9f2" -> (known after apply)
+! content_sha256       = "8ba5aabc73c2e998f2804fd6362f06685a165c2031b2c71d5ffc32b6e14bdc98" -> (known after apply)
+! content_sha512       = "76d6dc7263ec2b35b0d36a4292f259d449ed1adeb236c4bdb1df1dc218651e6b4f7f0e6be4c955a18acc828d86f623f74b5ef980bbf66d3f9660b17966a2146d" -> (known after apply)
+! id                   = "9b900384cf991dcf2b4b5d24ffc31aead814a9f2" -> (known after apply)
   # (3 unchanged attributes hidden)
 ```
 

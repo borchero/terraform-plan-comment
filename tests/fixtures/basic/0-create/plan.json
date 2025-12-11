@@ -49,6 +49,26 @@
           "sensitive_values": {
             "sensitive_content": true
           }
+        },
+        {
+          "address": "local_file.test3",
+          "mode": "managed",
+          "type": "local_file",
+          "name": "test3",
+          "provider_name": "registry.terraform.io/hashicorp/local",
+          "schema_version": 0,
+          "values": {
+            "content": "normal line\n  - line with hyphen\n    + line with plus sign\nnormal line\n  - line with hyphen\n    + line with plus sign\n",
+            "content_base64": null,
+            "directory_permission": "0777",
+            "file_permission": "0777",
+            "filename": "../test3.txt",
+            "sensitive_content": null,
+            "source": null
+          },
+          "sensitive_values": {
+            "sensitive_content": true
+          }
         }
       ]
     }
@@ -124,6 +144,41 @@
           "sensitive_content": true
         }
       }
+    },
+    {
+      "address": "local_file.test3",
+      "mode": "managed",
+      "type": "local_file",
+      "name": "test3",
+      "provider_name": "registry.terraform.io/hashicorp/local",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "content": "normal line\n  - line with hyphen\n    + line with plus sign\nnormal line\n  - line with hyphen\n    + line with plus sign\n",
+          "content_base64": null,
+          "directory_permission": "0777",
+          "file_permission": "0777",
+          "filename": "../test3.txt",
+          "sensitive_content": null,
+          "source": null
+        },
+        "after_unknown": {
+          "content_base64sha256": true,
+          "content_base64sha512": true,
+          "content_md5": true,
+          "content_sha1": true,
+          "content_sha256": true,
+          "content_sha512": true,
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {
+          "sensitive_content": true
+        }
+      }
     }
   ],
   "configuration": {
@@ -165,6 +220,22 @@
             },
             "filename": {
               "constant_value": "../test2.txt"
+            }
+          },
+          "schema_version": 0
+        },
+        {
+          "address": "local_file.test3",
+          "mode": "managed",
+          "type": "local_file",
+          "name": "test3",
+          "provider_config_key": "local",
+          "expressions": {
+            "content": {
+              "constant_value": "normal line\n  - line with hyphen\n    + line with plus sign\nnormal line\n  - line with hyphen\n    + line with plus sign\n"
+            },
+            "filename": {
+              "constant_value": "../test3.txt"
             }
           },
           "schema_version": 0

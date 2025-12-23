@@ -1,6 +1,6 @@
 ## 📝 Terraform Plan
 
-**→ Resource Changes: 0 to create, 0 to update, 0 to re-create, 1 to delete, 0 ephemeral.**
+**→ Resource Changes: 0 to create, 0 to update, 0 to re-create, 2 to delete, 0 ephemeral.**
 
 ### 🗑️ Delete
 
@@ -21,5 +21,32 @@
 ```
 
 _→ because local_file.test is not in configuration_
+
+</details>
+
+<details><summary><code>local_file.test3</code></summary>
+
+```diff
+- content              = <<-EOT
+      just a line
+        - just a line with hyphen
+          + just a line with plus sign
+      normal line
+        - line with hyphen
+          + line with plus sign
+  EOT -> null
+- content_base64sha256 = "Mx+Gs6TW3lHl/Y5VDJIkiIJJjN7p/iXCEs45c31OeJs=" -> null
+- content_base64sha512 = "OuDyldj6HM5ALb8y0Rj70nAhHTeGsznjS+TT3HGbnH9fA/RCYqbkg4BhjM+n7t/Y98/lR0DXx9AQGzYRQCRgTQ==" -> null
+- content_md5          = "180a7f466b6b98c92160513b2341fe67" -> null
+- content_sha1         = "5baa9964c6c3c6230ee43fd4c2067c94da04f7c9" -> null
+- content_sha256       = "331f86b3a4d6de51e5fd8e550c92248882498cdee9fe25c212ce39737d4e789b" -> null
+- content_sha512       = "3ae0f295d8fa1cce402dbf32d118fbd270211d3786b339e34be4d3dc719b9c7f5f03f44262a6e48380618ccfa7eedfd8f7cfe54740d7c7d0101b36114024604d" -> null
+- directory_permission = "0777" -> null
+- file_permission      = "0777" -> null
+- filename             = "../test3.txt" -> null
+- id                   = "5baa9964c6c3c6230ee43fd4c2067c94da04f7c9" -> null
+```
+
+_→ because local_file.test3 is not in configuration_
 
 </details>

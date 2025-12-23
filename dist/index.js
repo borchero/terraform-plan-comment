@@ -38486,6 +38486,7 @@ function parsePlanfileJSON(json2) {
 function planIsEmpty(plan) {
   return !plan.createdResources && !plan.recreatedResources && !plan.updatedResources && !plan.deletedResources && !plan.ephemeralResources;
 }
+var TERRAFORM_DIFF_INDENTATION = 4;
 function extractResourceContent(name, humanReadablePlan) {
   const lines = humanReadablePlan.split("\n");
   const resourceHeaderIndex = lines.findIndex((line) => line.startsWith(`  # ${name}`));
@@ -38515,7 +38516,7 @@ function formatResourceContent(content) {
   const aligned = content.lines.map((line) => line.slice(6));
   const diffSuitable = aligned.map((line) => {
     const matches = line.match(/^( +)([+-~])( .*)$/);
-    if (matches?.length === 4) {
+    if (matches?.length === 4 && matches[1].length === TERRAFORM_DIFF_INDENTATION) {
       return matches[2] + matches[1] + matches[3];
     }
     return line;

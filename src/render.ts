@@ -29,6 +29,8 @@ type ResourceContent = {
   lines: string[]
 }
 
+const TERRAFORM_DIFF_INDENTATION = 4
+
 function extractResourceContent(name: string, humanReadablePlan: string): ResourceContent {
   const lines = humanReadablePlan.split('\n')
 
@@ -72,7 +74,7 @@ function formatResourceContent(content: ResourceContent): string {
   // the front.
   const diffSuitable = aligned.map((line) => {
     const matches = line.match(/^( +)([+-~])( .*)$/)
-    if (matches?.length === 4) {
+    if (matches?.length === 4 && matches[1].length === TERRAFORM_DIFF_INDENTATION) {
       return matches[2] + matches[1] + matches[3]
     }
     return line

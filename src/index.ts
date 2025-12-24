@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { createOrUpdateComment, deleteComment, renderMarkdown } from './comment'
-import { planIsEmpty, renderPlan } from './render'
+import { plansAreEmpty, renderPlan } from './render'
 
 async function run() {
   // 1) Setup
@@ -20,7 +20,7 @@ async function run() {
   const octokit = github.getOctokit(inputs.token)
 
   // 2) Render plan
-  const plan = await core.group('Render plan', () =>
+  const plans = await core.group('Render plan', () =>
     renderPlan({
       planfile: inputs.planfile,
       terraformCommand: inputs.terraformCmd,
@@ -31,12 +31,12 @@ async function run() {
   // 3) Render the plan diff markdown and set it as output
   const planMarkdown = await core.group('Render plan diff markdown', async () => {
     const markdown = renderMarkdown({
-      plan,
+      plans,
       header: inputs.header,
       expandDetails: inputs.expandComment
     })
     core.setOutput('markdown', markdown)
-    core.setOutput('empty', planIsEmpty(plan))
+    core.setOutput('empty', plansAreEmpty(plans))
     return markdown
   })
 
@@ -50,7 +50,7 @@ async function run() {
     !inputs.skipComment &&
     (inputs.prNumber || ['pull_request', 'pull_request_target'].includes(github.context.eventName))
   if (shouldPostComment) {
-    if (!inputs.skipEmpty || !planIsEmpty(plan)) {
+    if (!inputs.skipEmpty || !plansAreEmpty(plans)) {
       // 5) Post comment with markdown (if applicable)
       await core.group('Render comment', () => {
         return createOrUpdateComment({ octokit, content: planMarkdown, prNumber: inputs.prNumber })

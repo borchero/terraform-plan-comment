@@ -38608,6 +38608,9 @@ function parsePlanfileJSON(json2) {
 function planIsEmpty(plan) {
   return !plan.createdResources && !plan.recreatedResources && !plan.updatedResources && !plan.deletedResources && !plan.ephemeralResources;
 }
+function plansAreEmpty(plans) {
+  return !plans.map((plan) => planIsEmpty(plan)).some((result) => result === false);
+}
 var TERRAFORM_DIFF_INDENTATION = 4;
 function extractResourceContent(name, humanReadablePlan) {
   const lines = humanReadablePlan.split("\n");
@@ -38685,6 +38688,29 @@ function internalRenderPlan(structuredPlan, humanReadablePlan) {
     ephemeralResources: extractResources(ephemeralResources, humanReadablePlan)
   };
 }
+async function renderTerraformPlan({
+  planfile,
+  terraformCommand,
+  options,
+  humanReadablePlanfile
+}) {
+  const structuredPlanfile = await exec.getExecOutput(terraformCommand, ["show", "-json", planfile], options).then((output) => {
+    const jsonStart = output.stdout.indexOf("{");
+    if (jsonStart === -1) throw new Error("No JSON found in planfile output");
+    const jsonText = output.stdout.slice(jsonStart);
+    return JSON.parse(jsonText);
+  }).then((json2) => parsePlanfileJSON(json2));
+  return [internalRenderPlan(structuredPlanfile, humanReadablePlanfile)];
+}
+async function renderTerragruntPlan({
+  planfile,
+  terraformCommand,
+  options,
+  humanReadablePlanfile
+}) {
+  const jsonPlans = await exec.getExecOutput(terraformCommand, ["show", "-json", planfile], options).then((output) => output.stdout.split("\n")).then((plans) => plans.filter((plan) => plan !== ""));
+  return jsonPlans.map((plan) => JSON.parse(plan)).map((json2) => parsePlanfileJSON(json2)).map((structuredPlanfile) => internalRenderPlan(structuredPlanfile, humanReadablePlanfile));
+}
 async function renderPlan({
   planfile,
   terraformCommand,
@@ -38694,14 +38720,25 @@ async function renderPlan({
     cwd: workingDirectory,
     silent: true
   };
-  const structuredPlanfile = await exec.getExecOutput(terraformCommand, ["show", "-json", planfile], options).then((output) => {
-    const jsonStart = output.stdout.indexOf("{");
-    if (jsonStart === -1) throw new Error("No JSON found in planfile output");
-    const jsonText = output.stdout.slice(jsonStart);
-    return JSON.parse(jsonText);
-  }).then((json2) => parsePlanfileJSON(json2));
   const humanReadablePlanfile = await exec.getExecOutput(terraformCommand, ["show", "-no-color", planfile], options).then((output) => output.stdout);
-  return internalRenderPlan(structuredPlanfile, humanReadablePlanfile);
+  try {
+    return await renderTerraformPlan({
+      planfile,
+      terraformCommand,
+      options,
+      humanReadablePlanfile
+    });
+  } catch (error46) {
+    if (error46 instanceof SyntaxError) {
+      return await renderTerragruntPlan({
+        planfile,
+        terraformCommand,
+        options,
+        humanReadablePlanfile
+      });
+    }
+  }
+  return [];
 }
 
 // src/comment.ts
@@ -38722,7 +38759,7 @@ ${content}
 }
 function renderBody(plan, options) {
   if (planIsEmpty(plan)) {
-    return "**\u2192 No Resource Changes!**";
+    return "";
   }
   let body = `**\u2192 Resource Changes: ${Object.keys(plan.createdResources ?? {}).length} to create, ${Object.keys(plan.updatedResources ?? {}).length} to update, ${Object.keys(plan.recreatedResources ?? {}).length} to re-create, ${Object.keys(plan.deletedResources ?? {}).length} to delete, ${Object.keys(plan.ephemeralResources ?? {}).length} ephemeral.**`;
   if (plan.createdResources) {
@@ -38748,12 +38785,15 @@ function renderBody(plan, options) {
   return body;
 }
 function renderMarkdown({
-  plan,
+  plans,
   header,
   includeFooter,
   expandDetails
 }) {
-  const body = renderBody(plan, { expandDetails });
+  let body = plans.map((plan) => renderBody(plan, { expandDetails })).filter((item) => item !== "");
+  if (body.length === 0) {
+    body = ["**\u2192 No Resource Changes!**"];
+  }
   let footer = "";
   if (includeFooter === void 0 || includeFooter === true) {
     footer = `
@@ -38768,7 +38808,7 @@ _Triggered by @${github.context.actor}`;
   }
   return `## ${header}
 
-${body}${footer}`;
+${body.join("\n\n")}${footer}`;
 }
 async function createOrUpdateComment({
   octokit,
@@ -38837,7 +38877,7 @@ async function run() {
     expandComment: core.getBooleanInput("expand-comment", { required: true })
   };
   const octokit = github2.getOctokit(inputs.token);
-  const plan = await core.group(
+  const plans = await core.group(
     "Render plan",
     () => renderPlan({
       planfile: inputs.planfile,
@@ -38847,12 +38887,12 @@ async function run() {
   );
   const planMarkdown = await core.group("Render plan diff markdown", async () => {
     const markdown = renderMarkdown({
-      plan,
+      plans,
       header: inputs.header,
       expandDetails: inputs.expandComment
     });
     core.setOutput("markdown", markdown);
-    core.setOutput("empty", planIsEmpty(plan));
+    core.setOutput("empty", plansAreEmpty(plans));
     return markdown;
   });
   await core.group("Adding plan to step summary", async () => {
@@ -38860,7 +38900,7 @@ async function run() {
   });
   const shouldPostComment = !inputs.skipComment && (inputs.prNumber || ["pull_request", "pull_request_target"].includes(github2.context.eventName));
   if (shouldPostComment) {
-    if (!inputs.skipEmpty || !planIsEmpty(plan)) {
+    if (!inputs.skipEmpty || !plansAreEmpty(plans)) {
       await core.group("Render comment", () => {
         return createOrUpdateComment({ octokit, content: planMarkdown, prNumber: inputs.prNumber });
       });

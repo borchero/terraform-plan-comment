@@ -1,6 +1,6 @@
 # terraform-plan-comment
 
-GitHub Action to post the output of `terraform plan` to a pull request comment.
+GitHub Action to post the outputt of `terraform plan` to a pull request comment.
 
 ## Features
 

@@ -1,24 +1,28 @@
 import * as fs from 'fs'
-import { renderPlan } from '../src/render'
-import { getExecOutput } from '@actions/exec'
+import { jest, afterEach, test, expect, beforeEach } from '@jest/globals'
 
-jest.mock('@actions/exec')
+// Mock the module before importing
+const mockGetExecOutput = jest.fn()
+jest.unstable_mockModule('@actions/exec', () => ({
+  getExecOutput: mockGetExecOutput
+}))
 
-const mockedgetExecOutput = jest.mocked(getExecOutput, { shallow: true })
+// Import after mocking
+const { renderPlan } = await import('../src/render.js')
 
 afterEach(() => {
-  mockedgetExecOutput?.mockReset()
+  mockGetExecOutput.mockReset()
 })
 
 test.each(['basic/0-create', 'basic/1-modify', 'basic/2-delete', 'basic/5-terragrunt'])(
   'render terraform successful',
-  async (arg) => {
+  async (arg: string) => {
     const json = fs.readFileSync(`tests/fixtures/${arg}/plan.json`, 'utf-8')
     const plan = fs.readFileSync(`tests/fixtures/${arg}/plan.txt`, 'utf-8')
-    mockedgetExecOutput.mockImplementationOnce(() =>
+    mockGetExecOutput.mockImplementationOnce(() =>
       Promise.resolve({ exitCode: 0, stdout: plan, stderr: '' })
     )
-    mockedgetExecOutput.mockImplementationOnce(() =>
+    mockGetExecOutput.mockImplementationOnce(() =>
       Promise.resolve({ exitCode: 0, stdout: json, stderr: '' })
     )
     const plans = await renderPlan({
@@ -26,19 +30,19 @@ test.each(['basic/0-create', 'basic/1-modify', 'basic/2-delete', 'basic/5-terrag
       terraformCommand: 'terraform',
       workingDirectory: '/'
     })
-    expect(getExecOutput).toHaveBeenCalledTimes(2)
+    expect(mockGetExecOutput).toHaveBeenCalledTimes(2)
     // expects 1 plan after execution
     expect(plans).toHaveLength(1)
   }
 )
 
-test.each(['basic/6-terragrunt-multiplan'])('render terragrunt successful', async (arg) => {
+test.each(['basic/6-terragrunt-multiplan'])('render terragrunt successful', async (arg: string) => {
   const json = fs.readFileSync(`tests/fixtures/${arg}/plan.json`, 'utf-8')
   const plan = fs.readFileSync(`tests/fixtures/${arg}/plan.txt`, 'utf-8')
-  mockedgetExecOutput.mockImplementationOnce(() =>
+  mockGetExecOutput.mockImplementationOnce(() =>
     Promise.resolve({ exitCode: 0, stdout: plan, stderr: '' })
   )
-  mockedgetExecOutput.mockImplementation(() =>
+  mockGetExecOutput.mockImplementation(() =>
     Promise.resolve({ exitCode: 0, stdout: json, stderr: '' })
   )
   const plans = await renderPlan({
@@ -46,7 +50,7 @@ test.each(['basic/6-terragrunt-multiplan'])('render terragrunt successful', asyn
     terraformCommand: 'terragrunt',
     workingDirectory: '/'
   })
-  expect(getExecOutput).toHaveBeenCalledTimes(3)
+  expect(mockGetExecOutput).toHaveBeenCalledTimes(3)
   // expects 1 plans after execution
   expect(plans).toHaveLength(3)
 })

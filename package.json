@@ -7,8 +7,8 @@
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix",
     "prettier": "prettier -w .",
-    "test": "jest",
-    "test:fixtures": "bash tests/fixtures/generate.sh && GENERATE_FIXTURE=1 jest tests/e2e.test.ts"
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest",
+    "test:fixtures": "bash tests/fixtures/generate.sh && NODE_OPTIONS=\"--experimental-vm-modules\" GENERATE_FIXTURE=1 jest tests/e2e.test.ts"
   },
   "keywords": [],
   "author": "Oliver Borchert",
@@ -22,9 +22,11 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@jest/globals": "^30.2.0",
     "@octokit/webhooks-schemas": "^7.6.1",
     "@octokit/webhooks-types": "^7.6.1",
     "@types/jest": "^30.0.0",
+    "@types/node": "^25.2.3",
     "@types/semver": "^7.7.1",
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",

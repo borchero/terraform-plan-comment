@@ -2,7 +2,6 @@ import * as fs from 'fs'
 import { internalRenderPlan } from '../src/render'
 import { parsePlanfileJSON } from '../src/planfile'
 import { renderMarkdown } from '../src/comment'
-import * as github from '@actions/github'
 
 jest.mock('@actions/github', () => ({
   context: {
@@ -87,8 +86,8 @@ test('footer does not mention users', () => {
   expect(renderedMarkdown).toContain('---')
   expect(renderedMarkdown).toContain('Triggered by')
 
-  // Verify username is wrapped in backticks, not mentioned with @
-  expect(renderedMarkdown).toContain('Triggered by `testuser`')
+  // Verify username is wrapped in backticks with @, not mentioned directly
+  expect(renderedMarkdown).toContain('Triggered by `@testuser`')
   expect(renderedMarkdown).not.toContain('Triggered by @testuser')
 
   // Verify commit SHA is also in backticks

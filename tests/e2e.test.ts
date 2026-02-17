@@ -2,6 +2,21 @@ import * as fs from 'fs'
 import { internalRenderPlan } from '../src/render'
 import { parsePlanfileJSON } from '../src/planfile'
 import { renderMarkdown } from '../src/comment'
+import * as github from '@actions/github'
+
+jest.mock('@actions/github', () => ({
+  context: {
+    actor: 'testuser',
+    eventName: 'pull_request',
+    payload: {
+      pull_request: {
+        head: {
+          sha: 'abc123def456'
+        }
+      }
+    }
+  }
+}))
 
 test.each([
   'basic/0-create',
@@ -55,3 +70,27 @@ test.each(['basic/6-terragrunt-multiplan', 'basic/5-terragrunt'])(
     }
   }
 )
+
+test('footer does not mention users', () => {
+  const planJson = JSON.parse(fs.readFileSync('tests/fixtures/basic/0-create/plan.json', 'utf-8'))
+  const planTxt = fs.readFileSync('tests/fixtures/basic/0-create/plan.txt', 'utf-8')
+  const planfile = parsePlanfileJSON(planJson)
+  const renderedPlan = internalRenderPlan(planfile, planTxt)
+  const renderedMarkdown = renderMarkdown({
+    plans: [renderedPlan],
+    header: '📝 Terraform Plan',
+    includeFooter: true,
+    expandDetails: false
+  })
+
+  // Verify the footer is present
+  expect(renderedMarkdown).toContain('---')
+  expect(renderedMarkdown).toContain('Triggered by')
+
+  // Verify username is wrapped in backticks, not mentioned with @
+  expect(renderedMarkdown).toContain('Triggered by `testuser`')
+  expect(renderedMarkdown).not.toContain('Triggered by @testuser')
+
+  // Verify commit SHA is also in backticks
+  expect(renderedMarkdown).toContain('Commit: `abc123def456`')
+})

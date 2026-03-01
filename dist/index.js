@@ -40471,7 +40471,7 @@ function renderMarkdown({
 
 ---
 
-_Triggered by @${context2.actor}`;
+_Triggered by \`@${context2.actor}\``;
     if (context2.eventName === "pull_request") {
       footer += `, Commit: \`${context2.payload.pull_request.head.sha}\``;
     }

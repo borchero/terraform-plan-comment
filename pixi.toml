@@ -5,7 +5,7 @@ platforms = ["linux-64", "osx-64", "osx-arm64"]
 requires-pixi = ">=0.58"
 
 [dependencies]
-nodejs = "=20"
+nodejs = "=24"
 pnpm = "*"
 
 [feature.pre-commit.dependencies]

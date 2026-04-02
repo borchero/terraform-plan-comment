@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ES2020",
+    "module": "nodenext",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
@@ -10,7 +10,8 @@
     "declaration": true,
     "sourceMap": true,
     "outDir": "dist",
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
+    "types": ["node", "jest", "semver"],
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true
   },

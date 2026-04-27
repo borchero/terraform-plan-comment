@@ -40407,9 +40407,10 @@ async function renderPlan({
         options,
         humanReadablePlanfile
       });
+    } else {
+      throw error49;
     }
   }
-  return [];
 }
 
 // src/comment.ts

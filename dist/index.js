@@ -40327,14 +40327,18 @@ _\u2192 ${content.reason}_`;
   }
   return result;
 }
-function extractResources(names, humanReadablePlan) {
+function extractResources(names, humanReadablePlan, suppressErrors = false) {
   if (names.length === 0) {
     return void 0;
   }
   return names.reduce(
     (acc, name) => {
-      const content = extractResourceContent(name, humanReadablePlan);
-      acc[name] = formatResourceContent(content);
+      try {
+        const content = extractResourceContent(name, humanReadablePlan);
+        acc[name] = formatResourceContent(content);
+      } catch (error49) {
+        if (!suppressErrors || error49 instanceof SyntaxError) throw error49;
+      }
       return acc;
     },
     {}
@@ -40356,7 +40360,7 @@ function internalRenderPlan(structuredPlan, humanReadablePlan) {
     updatedResources: extractResources(updatedResources, humanReadablePlan),
     recreatedResources: extractResources(recreatedResources, humanReadablePlan),
     deletedResources: extractResources(deletedResources, humanReadablePlan),
-    ephemeralResources: extractResources(ephemeralResources, humanReadablePlan)
+    ephemeralResources: extractResources(ephemeralResources, humanReadablePlan, true)
   };
 }
 async function renderTerraformPlan({
@@ -40407,9 +40411,10 @@ async function renderPlan({
         options,
         humanReadablePlanfile
       });
+    } else {
+      throw error49;
     }
   }
-  return [];
 }
 
 // src/comment.ts

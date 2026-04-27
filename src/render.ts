@@ -93,15 +93,20 @@ function formatResourceContent(content: ResourceContent): string {
 
 function extractResources(
   names: string[],
-  humanReadablePlan: string
+  humanReadablePlan: string,
+  suppressErrors = false
 ): Record<string, string> | undefined {
   if (names.length === 0) {
     return undefined
   }
   return names.reduce(
     (acc, name) => {
-      const content = extractResourceContent(name, humanReadablePlan)
-      acc[name] = formatResourceContent(content)
+      try {
+        const content = extractResourceContent(name, humanReadablePlan)
+        acc[name] = formatResourceContent(content)
+      } catch (error) {
+        if (!suppressErrors || error instanceof SyntaxError) throw error
+      }
       return acc
     },
     {} as Record<string, string>
@@ -146,7 +151,7 @@ export function internalRenderPlan(
     updatedResources: extractResources(updatedResources, humanReadablePlan),
     recreatedResources: extractResources(recreatedResources, humanReadablePlan),
     deletedResources: extractResources(deletedResources, humanReadablePlan),
-    ephemeralResources: extractResources(ephemeralResources, humanReadablePlan)
+    ephemeralResources: extractResources(ephemeralResources, humanReadablePlan, true)
   }
 }
 

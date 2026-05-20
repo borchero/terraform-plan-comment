@@ -26469,6 +26469,127 @@ function getOctokit(token, options, ...additionalPlugins) {
   return new GitHubWithPlugins(getOctokitOptions(token, options));
 }
 
+// src/comment.ts
+function renderResources(resources, options) {
+  let result = "";
+  for (const key of Object.keys(resources).sort()) {
+    const content = resources[key];
+    const openAttr = options.expandDetails ? " open" : "";
+    result += `
+
+<details${openAttr}><summary><code>${key}</code></summary>
+
+${content}
+
+</details>`;
+  }
+  return result;
+}
+function renderBody(plan, options) {
+  if (plan.resourcesChanges.noChanges()) {
+    return "";
+  }
+  let body = "**\u2192 " + plan.resourcesChanges.summary() + "**";
+  if (plan.createdResources) {
+    body += "\n\n### \u2728 Create";
+    body += renderResources(plan.createdResources, options);
+  }
+  if (plan.updatedResources) {
+    body += "\n\n### \u267B\uFE0F Update";
+    body += renderResources(plan.updatedResources, options);
+  }
+  if (plan.recreatedResources) {
+    body += "\n\n### \u2699\uFE0F Re-Create";
+    body += renderResources(plan.recreatedResources, options);
+  }
+  if (plan.deletedResources) {
+    body += "\n\n### \u{1F5D1}\uFE0F Delete";
+    body += renderResources(plan.deletedResources, options);
+  }
+  if (plan.ephemeralResources) {
+    body += "\n\n### \u{1F47B} Ephemeral";
+    body += renderResources(plan.ephemeralResources, options);
+  }
+  return body;
+}
+function renderMarkdown({
+  renderResult,
+  header,
+  includeFooter,
+  expandDetails
+}) {
+  let body = renderResult.renderedPlans.map((plan) => renderBody(plan, { expandDetails })).filter((item) => item !== "");
+  if (body.length === 0) {
+    body = ["**\u2192 No Resource Changes!**"];
+  }
+  let footer = "";
+  if (includeFooter === void 0 || includeFooter === true) {
+    footer = `
+
+---
+
+_Triggered by \`@${context2.actor}\``;
+    if (context2.eventName === "pull_request") {
+      footer += `, Commit: \`${context2.payload.pull_request.head.sha}\``;
+    }
+    footer += "_";
+  }
+  return `## ${header}
+
+${body.join("\n\n")}${footer}`;
+}
+async function createOrUpdateComment({
+  octokit,
+  content,
+  prNumber
+}) {
+  const issueNumber = prNumber ?? context2.issue.number;
+  const comments = await octokit.paginate(octokit.rest.issues.listComments, {
+    owner: context2.repo.owner,
+    repo: context2.repo.repo,
+    issue_number: issueNumber
+  });
+  const header = content.split("\n")[0];
+  for (const comment of comments) {
+    if (comment.body?.startsWith(header)) {
+      await octokit.rest.issues.updateComment({
+        owner: context2.repo.owner,
+        repo: context2.repo.repo,
+        comment_id: comment.id,
+        body: content
+      });
+      return;
+    }
+  }
+  await octokit.rest.issues.createComment({
+    owner: context2.repo.owner,
+    repo: context2.repo.repo,
+    issue_number: issueNumber,
+    body: content
+  });
+}
+async function deleteComment({
+  octokit,
+  header
+}) {
+  const comments = await octokit.paginate(octokit.rest.issues.listComments, {
+    owner: context2.repo.owner,
+    repo: context2.repo.repo,
+    issue_number: context2.issue.number
+  });
+  for (const comment of comments) {
+    if (comment.body?.startsWith(header)) {
+      await octokit.rest.issues.deleteComment({
+        owner: context2.repo.owner,
+        repo: context2.repo.repo,
+        comment_id: comment.id
+      });
+      return true;
+    }
+  }
+  return false;
+}
+
 // src/planfile.ts
 var semver = __toESM(require_semver2());
 
@@ -40275,13 +40396,60 @@ function parsePlanfileJSON(json2) {
   return planfileSchema.parse(json2);
 }
 
+// src/resourceChanges.ts
+var ResourceChanges = class {
+  constructor(created, updated, recreated, deleted, ephemeral) {
+    this.created = created;
+    this.updated = updated;
+    this.recreated = recreated;
+    this.deleted = deleted;
+    this.ephemeral = ephemeral;
+  }
+  summary() {
+    return `Resource Changes: ${this.created} to create, ${this.updated} to update, ${this.recreated} to re-create, ${this.deleted} to delete, ${this.ephemeral} ephemeral.`;
+  }
+  noChanges() {
+    return !this.created && !this.recreated && !this.updated && !this.deleted && !this.ephemeral;
+  }
+};
+
+// src/renderedPlan.ts
+var RenderedPlan = class {
+  constructor(createdResources, updatedResources, recreatedResources, deletedResources, ephemeralResources) {
+    this.createdResources = createdResources;
+    this.updatedResources = updatedResources;
+    this.recreatedResources = recreatedResources;
+    this.deletedResources = deletedResources;
+    this.ephemeralResources = ephemeralResources;
+    this.resourcesChanges = new ResourceChanges(
+      Object.keys(this.createdResources || {}).length,
+      Object.keys(this.updatedResources || {}).length,
+      Object.keys(this.recreatedResources || {}).length,
+      Object.keys(this.deletedResources || {}).length,
+      Object.keys(this.ephemeralResources || {}).length
+    );
+  }
+};
+
+// src/renderResult.ts
+var RenderResult = class {
+  constructor(plans) {
+    this.renderedPlans = plans;
+    this.resourcesChanges = plans.reduce(
+      (acc, plan) => {
+        acc.created += plan.resourcesChanges.created;
+        acc.updated += plan.resourcesChanges.updated;
+        acc.recreated += plan.resourcesChanges.recreated;
+        acc.deleted += plan.resourcesChanges.deleted;
+        acc.ephemeral += plan.resourcesChanges.ephemeral;
+        return acc;
+      },
+      new ResourceChanges(0, 0, 0, 0, 0)
+    );
+  }
+};
+
 // src/render.ts
-function planIsEmpty(plan) {
-  return !plan.createdResources && !plan.recreatedResources && !plan.updatedResources && !plan.deletedResources && !plan.ephemeralResources;
-}
-function plansAreEmpty(plans) {
-  return !plans.map((plan) => planIsEmpty(plan)).some((result) => result === false);
-}
 var TERRAFORM_DIFF_INDENTATION = 4;
 function extractResourceContent(name, humanReadablePlan) {
   const lines = humanReadablePlan.split("\n");
@@ -40342,7 +40510,7 @@ function extractResources(names, humanReadablePlan) {
 }
 function internalRenderPlan(structuredPlan, humanReadablePlan) {
   if (structuredPlan.resource_changes === void 0 || structuredPlan.resource_changes.length === 0) {
-    return {};
+    return new RenderedPlan({}, {}, {}, {}, {});
   }
   const createdResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["create"].toString()).map((r) => r.address);
   const updatedResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["update"].toString()).map((r) => r.address);
@@ -40351,13 +40519,13 @@ function internalRenderPlan(structuredPlan, humanReadablePlan) {
   ).map((r) => r.address);
   const deletedResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["delete"].toString()).map((r) => r.address);
   const ephemeralResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["open"].toString()).map((r) => r.address);
-  return {
-    createdResources: extractResources(createdResources, humanReadablePlan),
-    updatedResources: extractResources(updatedResources, humanReadablePlan),
-    recreatedResources: extractResources(recreatedResources, humanReadablePlan),
-    deletedResources: extractResources(deletedResources, humanReadablePlan),
-    ephemeralResources: extractResources(ephemeralResources, humanReadablePlan)
-  };
+  return new RenderedPlan(
+    extractResources(createdResources, humanReadablePlan),
+    extractResources(updatedResources, humanReadablePlan),
+    extractResources(recreatedResources, humanReadablePlan),
+    extractResources(deletedResources, humanReadablePlan),
+    extractResources(ephemeralResources, humanReadablePlan)
+  );
 }
 async function renderTerraformPlan({
   planfile,
@@ -40371,7 +40539,7 @@ async function renderTerraformPlan({
     const jsonText = output.stdout.slice(jsonStart);
     return JSON.parse(jsonText);
   }).then((json2) => parsePlanfileJSON(json2));
-  return [internalRenderPlan(structuredPlanfile, humanReadablePlanfile)];
+  return internalRenderPlan(structuredPlanfile, humanReadablePlanfile);
 }
 async function renderTerragruntPlan({
   planfile,
@@ -40380,7 +40548,8 @@ async function renderTerragruntPlan({
   humanReadablePlanfile
 }) {
   const jsonPlans = await getExecOutput(terraformCommand, ["show", "-json", planfile], options).then((output) => output.stdout.split("\n")).then((plans) => plans.filter((plan) => plan !== ""));
-  return jsonPlans.map((plan) => JSON.parse(plan)).map((json2) => parsePlanfileJSON(json2)).map((structuredPlanfile) => internalRenderPlan(structuredPlanfile, humanReadablePlanfile));
+  const renderedPlans = jsonPlans.map((plan) => JSON.parse(plan)).map((json2) => parsePlanfileJSON(json2)).map((structuredPlanfile) => internalRenderPlan(structuredPlanfile, humanReadablePlanfile));
+  return new RenderResult(renderedPlans);
 }
 async function renderPlan({
   planfile,
@@ -40393,12 +40562,13 @@ async function renderPlan({
   };
   const humanReadablePlanfile = await getExecOutput(terraformCommand, ["show", "-no-color", planfile], options).then((output) => output.stdout);
   try {
-    return await renderTerraformPlan({
+    const renderedPlan = await renderTerraformPlan({
       planfile,
       terraformCommand,
       options,
       humanReadablePlanfile
     });
+    return new RenderResult([renderedPlan]);
   } catch (error49) {
     if (error49 instanceof SyntaxError) {
       return await renderTerragruntPlan({
@@ -40409,128 +40579,7 @@ async function renderPlan({
       });
     }
   }
-  return [];
-}
-
-// src/comment.ts
-function renderResources(resources, options) {
-  let result = "";
-  for (const key of Object.keys(resources).sort()) {
-    const content = resources[key];
-    const openAttr = options.expandDetails ? " open" : "";
-    result += `
-
-<details${openAttr}><summary><code>${key}</code></summary>
-
-${content}
-
-</details>`;
-  }
-  return result;
-}
-function renderBody(plan, options) {
-  if (planIsEmpty(plan)) {
-    return "";
-  }
-  let body = `**\u2192 Resource Changes: ${Object.keys(plan.createdResources ?? {}).length} to create, ${Object.keys(plan.updatedResources ?? {}).length} to update, ${Object.keys(plan.recreatedResources ?? {}).length} to re-create, ${Object.keys(plan.deletedResources ?? {}).length} to delete, ${Object.keys(plan.ephemeralResources ?? {}).length} ephemeral.**`;
-  if (plan.createdResources) {
-    body += "\n\n### \u2728 Create";
-    body += renderResources(plan.createdResources, options);
-  }
-  if (plan.updatedResources) {
-    body += "\n\n### \u267B\uFE0F Update";
-    body += renderResources(plan.updatedResources, options);
-  }
-  if (plan.recreatedResources) {
-    body += "\n\n### \u2699\uFE0F Re-Create";
-    body += renderResources(plan.recreatedResources, options);
-  }
-  if (plan.deletedResources) {
-    body += "\n\n### \u{1F5D1}\uFE0F Delete";
-    body += renderResources(plan.deletedResources, options);
-  }
-  if (plan.ephemeralResources) {
-    body += "\n\n### \u{1F47B} Ephemeral";
-    body += renderResources(plan.ephemeralResources, options);
-  }
-  return body;
-}
-function renderMarkdown({
-  plans,
-  header,
-  includeFooter,
-  expandDetails
-}) {
-  let body = plans.map((plan) => renderBody(plan, { expandDetails })).filter((item) => item !== "");
-  if (body.length === 0) {
-    body = ["**\u2192 No Resource Changes!**"];
-  }
-  let footer = "";
-  if (includeFooter === void 0 || includeFooter === true) {
-    footer = `
-
----
-
-_Triggered by \`@${context2.actor}\``;
-    if (context2.eventName === "pull_request") {
-      footer += `, Commit: \`${context2.payload.pull_request.head.sha}\``;
-    }
-    footer += "_";
-  }
-  return `## ${header}
-
-${body.join("\n\n")}${footer}`;
-}
-async function createOrUpdateComment({
-  octokit,
-  content,
-  prNumber
-}) {
-  const issueNumber = prNumber ?? context2.issue.number;
-  const comments = await octokit.paginate(octokit.rest.issues.listComments, {
-    owner: context2.repo.owner,
-    repo: context2.repo.repo,
-    issue_number: issueNumber
-  });
-  const header = content.split("\n")[0];
-  for (const comment of comments) {
-    if (comment.body?.startsWith(header)) {
-      await octokit.rest.issues.updateComment({
-        owner: context2.repo.owner,
-        repo: context2.repo.repo,
-        comment_id: comment.id,
-        body: content
-      });
-      return;
-    }
-  }
-  await octokit.rest.issues.createComment({
-    owner: context2.repo.owner,
-    repo: context2.repo.repo,
-    issue_number: issueNumber,
-    body: content
-  });
-}
-async function deleteComment({
-  octokit,
-  header
-}) {
-  const comments = await octokit.paginate(octokit.rest.issues.listComments, {
-    owner: context2.repo.owner,
-    repo: context2.repo.repo,
-    issue_number: context2.issue.number
-  });
-  for (const comment of comments) {
-    if (comment.body?.startsWith(header)) {
-      await octokit.rest.issues.deleteComment({
-        owner: context2.repo.owner,
-        repo: context2.repo.repo,
-        comment_id: comment.id
-      });
-      return true;
-    }
-  }
-  return false;
+  return new RenderResult([]);
 }
 
 // src/index.ts
@@ -40548,7 +40597,7 @@ async function run() {
     expandComment: getBooleanInput("expand-comment", { required: true })
   };
   const octokit = getOctokit(inputs.token);
-  const plans = await group(
+  const renderResult = await group(
     "Render plan",
     () => renderPlan({
       planfile: inputs.planfile,
@@ -40558,20 +40607,26 @@ async function run() {
   );
   const planMarkdown = await group("Render plan diff markdown", async () => {
     const markdown = renderMarkdown({
-      plans,
+      renderResult,
       header: inputs.header,
       expandDetails: inputs.expandComment
     });
     setOutput("markdown", markdown);
-    setOutput("empty", plansAreEmpty(plans));
+    setOutput("empty", renderResult.resourcesChanges.noChanges());
     return markdown;
   });
+  setOutput("summary", renderResult.resourcesChanges.summary());
+  setOutput("create", renderResult.resourcesChanges.created);
+  setOutput("update", renderResult.resourcesChanges.updated);
+  setOutput("delete", renderResult.resourcesChanges.deleted);
+  setOutput("recreate", renderResult.resourcesChanges.recreated);
+  setOutput("ephemeral", renderResult.resourcesChanges.ephemeral);
   await group("Adding plan to step summary", async () => {
     await summary.addRaw(planMarkdown).write();
   });
   const shouldPostComment = !inputs.skipComment && (inputs.prNumber || ["pull_request", "pull_request_target"].includes(context2.eventName));
   if (shouldPostComment) {
-    if (!inputs.skipEmpty || !plansAreEmpty(plans)) {
+    if (!inputs.skipEmpty || !renderResult.resourcesChanges.noChanges()) {
       await group("Render comment", () => {
         return createOrUpdateComment({ octokit, content: planMarkdown, prNumber: inputs.prNumber });
       });

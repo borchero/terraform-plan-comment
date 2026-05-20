@@ -1,7 +1,8 @@
 import type { GitHub } from '@actions/github/lib/utils'
 import * as github from '@actions/github'
 import type { PullRequestEvent } from '@octokit/webhooks-types'
-import { planIsEmpty, type RenderedPlan } from './render'
+import type { RenderedPlan } from './renderedPlan'
+import type { RenderResult } from './renderResult'
 
 function renderResources(
   resources: Record<string, string>,
@@ -17,17 +18,11 @@ function renderResources(
 }
 
 function renderBody(plan: RenderedPlan, options: { expandDetails: boolean }): string {
-  if (planIsEmpty(plan)) {
+  if (plan.resourcesChanges.noChanges()) {
     return ''
   }
 
-  let body =
-    '**→ Resource Changes: ' +
-    `${Object.keys(plan.createdResources ?? {}).length} to create, ` +
-    `${Object.keys(plan.updatedResources ?? {}).length} to update, ` +
-    `${Object.keys(plan.recreatedResources ?? {}).length} to re-create, ` +
-    `${Object.keys(plan.deletedResources ?? {}).length} to delete, ` +
-    `${Object.keys(plan.ephemeralResources ?? {}).length} ephemeral.**`
+  let body = '**→ ' + plan.resourcesChanges.summary() + '**'
 
   if (plan.createdResources) {
     body += '\n\n### ✨ Create'
@@ -54,18 +49,20 @@ function renderBody(plan: RenderedPlan, options: { expandDetails: boolean }): st
 }
 
 export function renderMarkdown({
-  plans,
+  renderResult,
   header,
   includeFooter,
   expandDetails
 }: {
-  plans: RenderedPlan[]
+  renderResult: RenderResult
   header: string
   includeFooter?: boolean
   expandDetails: boolean
 }): string {
   // Build body
-  let body = plans.map((plan) => renderBody(plan, { expandDetails })).filter((item) => item !== '')
+  let body = renderResult.renderedPlans
+    .map((plan) => renderBody(plan, { expandDetails }))
+    .filter((item) => item !== '')
   if (body.length === 0) {
     body = ['**→ No Resource Changes!**']
   }

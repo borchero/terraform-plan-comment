@@ -28,7 +28,7 @@ test.each(['basic/0-create', 'basic/1-modify', 'basic/2-delete', 'basic/5-terrag
     })
     expect(getExecOutput).toHaveBeenCalledTimes(2)
     // expects 1 plan after execution
-    expect(plans).toHaveLength(1)
+    expect(plans.renderedPlans).toHaveLength(1)
   }
 )
 
@@ -48,5 +48,5 @@ test.each(['basic/6-terragrunt-multiplan'])('render terragrunt successful', asyn
   })
   expect(getExecOutput).toHaveBeenCalledTimes(3)
   // expects 1 plans after execution
-  expect(plans).toHaveLength(3)
+  expect(plans.renderedPlans).toHaveLength(3)
 })

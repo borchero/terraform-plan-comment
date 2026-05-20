@@ -1,7 +1,8 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { createOrUpdateComment, deleteComment, renderMarkdown } from './comment'
-import { plansAreEmpty, renderPlan } from './render'
+import type { RenderResult } from './renderResult'
+import { renderPlan } from './render'
 
 async function run() {
   // 1) Setup
@@ -20,7 +21,7 @@ async function run() {
   const octokit = github.getOctokit(inputs.token)
 
   // 2) Render plan
-  const plans = await core.group('Render plan', () =>
+  const renderResult: RenderResult = await core.group('Render plan', () =>
     renderPlan({
       planfile: inputs.planfile,
       terraformCommand: inputs.terraformCmd,
@@ -31,16 +32,24 @@ async function run() {
   // 3) Render the plan diff markdown and set it as output
   const planMarkdown = await core.group('Render plan diff markdown', async () => {
     const markdown = renderMarkdown({
-      plans,
+      renderResult: renderResult,
       header: inputs.header,
       expandDetails: inputs.expandComment
     })
     core.setOutput('markdown', markdown)
-    core.setOutput('empty', plansAreEmpty(plans))
+    core.setOutput('empty', renderResult.resourcesChanges.noChanges())
     return markdown
   })
 
-  // 4) Add plan to GitHub step summary
+  // 4) Set outputs for resource changes
+  core.setOutput('summary', renderResult.resourcesChanges.summary())
+  core.setOutput('create', renderResult.resourcesChanges.created)
+  core.setOutput('update', renderResult.resourcesChanges.updated)
+  core.setOutput('delete', renderResult.resourcesChanges.deleted)
+  core.setOutput('recreate', renderResult.resourcesChanges.recreated)
+  core.setOutput('ephemeral', renderResult.resourcesChanges.ephemeral)
+
+  // 5) Add plan to GitHub step summary
   await core.group('Adding plan to step summary', async () => {
     await core.summary.addRaw(planMarkdown).write()
   })
@@ -50,7 +59,7 @@ async function run() {
     !inputs.skipComment &&
     (inputs.prNumber || ['pull_request', 'pull_request_target'].includes(github.context.eventName))
   if (shouldPostComment) {
-    if (!inputs.skipEmpty || !plansAreEmpty(plans)) {
+    if (!inputs.skipEmpty || !renderResult.resourcesChanges.noChanges()) {
       // 5) Post comment with markdown (if applicable)
       await core.group('Render comment', () => {
         return createOrUpdateComment({ octokit, content: planMarkdown, prNumber: inputs.prNumber })

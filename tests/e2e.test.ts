@@ -2,6 +2,7 @@ import * as fs from 'fs'
 import { internalRenderPlan } from '../src/render'
 import { parsePlanfileJSON } from '../src/planfile'
 import { renderMarkdown } from '../src/comment'
+import { RenderResult } from '../src/renderResult'
 
 jest.mock('@actions/github', () => ({
   context: {
@@ -30,7 +31,7 @@ test.each([
   const planfile = parsePlanfileJSON(planJson)
   const renderedPlan = internalRenderPlan(planfile, planTxt)
   const renderedMarkdown = renderMarkdown({
-    plans: [renderedPlan],
+    renderResult: new RenderResult([renderedPlan]),
     header: '📝 Terraform Plan',
     includeFooter: false,
     expandDetails: false
@@ -55,7 +56,7 @@ test.each(['basic/6-terragrunt-multiplan', 'basic/5-terragrunt'])(
       .map((json) => parsePlanfileJSON(json))
       .map((structuredPlanfile) => internalRenderPlan(structuredPlanfile, planTxt))
     const renderedMarkdown = renderMarkdown({
-      plans: renderedPlans,
+      renderResult: new RenderResult(renderedPlans),
       header: '📝 Terragrunt Plan',
       includeFooter: false,
       expandDetails: false,
@@ -76,7 +77,7 @@ test('footer does not mention users', () => {
   const planfile = parsePlanfileJSON(planJson)
   const renderedPlan = internalRenderPlan(planfile, planTxt)
   const renderedMarkdown = renderMarkdown({
-    plans: [renderedPlan],
+    renderResult: new RenderResult([renderedPlan]),
     header: '📝 Terraform Plan',
     includeFooter: true,
     expandDetails: false

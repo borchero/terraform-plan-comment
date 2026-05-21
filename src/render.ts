@@ -227,7 +227,9 @@ export async function renderPlan({
         options,
         humanReadablePlanfile
       })
+    } else {
+      // Re-throw unexpected errors
+      throw error
     }
   }
-  return []
 }

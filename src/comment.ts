@@ -1,7 +1,7 @@
 import type { GitHub } from '@actions/github/lib/utils'
 import * as github from '@actions/github'
 import type { PullRequestEvent } from '@octokit/webhooks-types'
-import { planIsEmpty, type RenderedPlan } from './render'
+import { planIsEmpty, summarize, summaryText, type RenderedPlan } from './render'
 
 function renderResources(
   resources: Record<string, string>,
@@ -21,13 +21,7 @@ function renderBody(plan: RenderedPlan, options: { expandDetails: boolean }): st
     return ''
   }
 
-  let body =
-    '**→ Resource Changes: ' +
-    `${Object.keys(plan.createdResources ?? {}).length} to create, ` +
-    `${Object.keys(plan.updatedResources ?? {}).length} to update, ` +
-    `${Object.keys(plan.recreatedResources ?? {}).length} to re-create, ` +
-    `${Object.keys(plan.deletedResources ?? {}).length} to delete, ` +
-    `${Object.keys(plan.ephemeralResources ?? {}).length} ephemeral.**`
+  let body = '**→ ' + summaryText(summarize([plan])) + '**'
 
   if (plan.createdResources) {
     body += '\n\n### ✨ Create'

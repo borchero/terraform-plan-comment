@@ -1,6 +1,6 @@
 ## 📝 Terraform Plan
 
-**→ Resource Changes: 0 to create, 0 to update, 0 to re-create, 2 to delete, 0 ephemeral.**
+**→ Resource Changes: 0 to create, 0 to update, 0 to re-create, 2 to delete, 0 ephemeral, 0 to import.**
 
 ### 🗑️ Delete
 

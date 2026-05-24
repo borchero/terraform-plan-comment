@@ -8,6 +8,41 @@ export type RenderedPlan = {
   recreatedResources?: Record<string, string>
   deletedResources?: Record<string, string>
   ephemeralResources?: Record<string, string>
+  importedCount?: number
+}
+
+export type ResourceCounts = {
+  created: number
+  updated: number
+  recreated: number
+  deleted: number
+  ephemeral: number
+  imported: number
+}
+
+export function summarize(plans: RenderedPlan[]): ResourceCounts {
+  return plans.reduce<ResourceCounts>(
+    (acc, plan) => ({
+      created: acc.created + Object.keys(plan.createdResources ?? {}).length,
+      updated: acc.updated + Object.keys(plan.updatedResources ?? {}).length,
+      recreated: acc.recreated + Object.keys(plan.recreatedResources ?? {}).length,
+      deleted: acc.deleted + Object.keys(plan.deletedResources ?? {}).length,
+      ephemeral: acc.ephemeral + Object.keys(plan.ephemeralResources ?? {}).length,
+      imported: acc.imported + (plan.importedCount ?? 0)
+    }),
+    { created: 0, updated: 0, recreated: 0, deleted: 0, ephemeral: 0, imported: 0 }
+  )
+}
+
+export function summaryText(counts: ResourceCounts): string {
+  return (
+    `Resource Changes: ${counts.created} to create, ` +
+    `${counts.updated} to update, ` +
+    `${counts.recreated} to re-create, ` +
+    `${counts.deleted} to delete, ` +
+    `${counts.ephemeral} ephemeral, ` +
+    `${counts.imported} to import.`
+  )
 }
 
 export function planIsEmpty(plan: RenderedPlan): boolean {
@@ -21,7 +56,7 @@ export function planIsEmpty(plan: RenderedPlan): boolean {
 }
 
 export function plansAreEmpty(plans: RenderedPlan[]): boolean {
-  return !plans.map((plan) => planIsEmpty(plan)).some((result) => result === false)
+  return plans.every(planIsEmpty)
 }
 
 type ResourceContent = {
@@ -140,13 +175,17 @@ export function internalRenderPlan(
   const ephemeralResources = structuredPlan.resource_changes
     .filter((r) => r.change.actions.toString() === ['open'].toString())
     .map((r) => r.address)
+  const importedCount = structuredPlan.resource_changes.filter(
+    (r) => r.change.importing !== undefined
+  ).length
 
   return {
     createdResources: extractResources(createdResources, humanReadablePlan),
     updatedResources: extractResources(updatedResources, humanReadablePlan),
     recreatedResources: extractResources(recreatedResources, humanReadablePlan),
     deletedResources: extractResources(deletedResources, humanReadablePlan),
-    ephemeralResources: extractResources(ephemeralResources, humanReadablePlan)
+    ephemeralResources: extractResources(ephemeralResources, humanReadablePlan),
+    importedCount: importedCount > 0 ? importedCount : undefined
   }
 }
 

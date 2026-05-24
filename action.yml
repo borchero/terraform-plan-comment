@@ -46,6 +46,21 @@ outputs:
     description: The raw markdown output of the terraform plan
   empty:
     description: Whether the terraform plan contains any change or not
+  change-summary:
+    description: A human-readable summary of the resource changes
+  num-resources-created:
+    description: The number of resources to be created
+  num-resources-updated:
+    description: The number of resources to be updated
+  num-resources-deleted:
+    description: The number of resources to be deleted
+  num-resources-recreated:
+    description: The number of resources to be recreated
+  num-resources-ephemeral:
+    description: The number of ephemeral resources
+  num-resources-imported:
+    description: The number of resources to be imported
+
 runs:
   using: node24
   main: dist/index.js

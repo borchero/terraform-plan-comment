@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { createOrUpdateComment, deleteComment, renderMarkdown } from './comment'
-import { plansAreEmpty, renderPlan } from './render'
+import { plansAreEmpty, renderPlan, summarize, summaryText } from './render'
 
 async function run() {
   // 1) Setup
@@ -27,6 +27,7 @@ async function run() {
       workingDirectory: inputs.workingDirectory
     })
   )
+  const counts = summarize(plans)
 
   // 3) Render the plan diff markdown and set it as output
   const planMarkdown = await core.group('Render plan diff markdown', async () => {
@@ -40,7 +41,16 @@ async function run() {
     return markdown
   })
 
-  // 4) Add plan to GitHub step summary
+  // 4) Set outputs for resource changes
+  core.setOutput('change-summary', summaryText(counts))
+  core.setOutput('num-resources-created', counts.created)
+  core.setOutput('num-resources-updated', counts.updated)
+  core.setOutput('num-resources-deleted', counts.deleted)
+  core.setOutput('num-resources-recreated', counts.recreated)
+  core.setOutput('num-resources-ephemeral', counts.ephemeral)
+  core.setOutput('num-resources-imported', counts.imported)
+
+  // 5) Add plan to GitHub step summary
   await core.group('Adding plan to step summary', async () => {
     await core.summary.addRaw(planMarkdown).write()
   })

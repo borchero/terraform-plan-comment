@@ -1,8 +1,59 @@
 import * as exec from '@actions/exec'
 import type { StructuredPlanfile } from './planfile'
 import { parsePlanfileJSON } from './planfile'
-import { RenderedPlan } from './renderedPlan'
-import { RenderResult } from './renderResult'
+
+export type RenderedPlan = {
+  createdResources?: Record<string, string>
+  updatedResources?: Record<string, string>
+  recreatedResources?: Record<string, string>
+  deletedResources?: Record<string, string>
+  ephemeralResources?: Record<string, string>
+}
+
+export type ResourceCounts = {
+  created: number
+  updated: number
+  recreated: number
+  deleted: number
+  ephemeral: number
+}
+
+export function summarize(plans: RenderedPlan[]): ResourceCounts {
+  return plans.reduce<ResourceCounts>(
+    (acc, plan) => ({
+      created: acc.created + Object.keys(plan.createdResources ?? {}).length,
+      updated: acc.updated + Object.keys(plan.updatedResources ?? {}).length,
+      recreated: acc.recreated + Object.keys(plan.recreatedResources ?? {}).length,
+      deleted: acc.deleted + Object.keys(plan.deletedResources ?? {}).length,
+      ephemeral: acc.ephemeral + Object.keys(plan.ephemeralResources ?? {}).length
+    }),
+    { created: 0, updated: 0, recreated: 0, deleted: 0, ephemeral: 0 }
+  )
+}
+
+export function summaryText(counts: ResourceCounts): string {
+  return (
+    `Resource Changes: ${counts.created} to create, ` +
+    `${counts.updated} to update, ` +
+    `${counts.recreated} to re-create, ` +
+    `${counts.deleted} to delete, ` +
+    `${counts.ephemeral} ephemeral.`
+  )
+}
+
+export function planIsEmpty(plan: RenderedPlan): boolean {
+  return (
+    !plan.createdResources &&
+    !plan.recreatedResources &&
+    !plan.updatedResources &&
+    !plan.deletedResources &&
+    !plan.ephemeralResources
+  )
+}
+
+export function plansAreEmpty(plans: RenderedPlan[]): boolean {
+  return plans.every(planIsEmpty)
+}
 
 type ResourceContent = {
   reason?: string
@@ -97,7 +148,7 @@ export function internalRenderPlan(
     structuredPlan.resource_changes === undefined ||
     structuredPlan.resource_changes.length === 0
   ) {
-    return new RenderedPlan({}, {}, {}, {}, {})
+    return {}
   }
 
   // Partition changes for output formatting and extract resources
@@ -121,13 +172,13 @@ export function internalRenderPlan(
     .filter((r) => r.change.actions.toString() === ['open'].toString())
     .map((r) => r.address)
 
-  return new RenderedPlan(
-    extractResources(createdResources, humanReadablePlan),
-    extractResources(updatedResources, humanReadablePlan),
-    extractResources(recreatedResources, humanReadablePlan),
-    extractResources(deletedResources, humanReadablePlan),
-    extractResources(ephemeralResources, humanReadablePlan)
-  )
+  return {
+    createdResources: extractResources(createdResources, humanReadablePlan),
+    updatedResources: extractResources(updatedResources, humanReadablePlan),
+    recreatedResources: extractResources(recreatedResources, humanReadablePlan),
+    deletedResources: extractResources(deletedResources, humanReadablePlan),
+    ephemeralResources: extractResources(ephemeralResources, humanReadablePlan)
+  }
 }
 
 async function renderTerraformPlan({
@@ -140,7 +191,7 @@ async function renderTerraformPlan({
   terraformCommand: string
   options: object
   humanReadablePlanfile: string
-}): Promise<RenderedPlan> {
+}): Promise<RenderedPlan[]> {
   const structuredPlanfile = await exec
     .getExecOutput(terraformCommand, ['show', '-json', planfile], options)
     .then((output) => {
@@ -150,7 +201,7 @@ async function renderTerraformPlan({
       return JSON.parse(jsonText)
     })
     .then((json) => parsePlanfileJSON(json))
-  return internalRenderPlan(structuredPlanfile, humanReadablePlanfile)
+  return [internalRenderPlan(structuredPlanfile, humanReadablePlanfile)]
 }
 
 async function renderTerragruntPlan({
@@ -163,16 +214,15 @@ async function renderTerragruntPlan({
   terraformCommand: string
   options: object
   humanReadablePlanfile: string
-}): Promise<RenderResult> {
+}): Promise<RenderedPlan[]> {
   const jsonPlans = await exec
     .getExecOutput(terraformCommand, ['show', '-json', planfile], options)
     .then((output) => output.stdout.split('\n'))
     .then((plans) => plans.filter((plan) => plan !== ''))
-  const renderedPlans = jsonPlans
+  return jsonPlans
     .map((plan) => JSON.parse(plan))
     .map((json) => parsePlanfileJSON(json))
     .map((structuredPlanfile) => internalRenderPlan(structuredPlanfile, humanReadablePlanfile))
-  return new RenderResult(renderedPlans)
 }
 
 export async function renderPlan({
@@ -183,7 +233,7 @@ export async function renderPlan({
   planfile: string
   terraformCommand: string
   workingDirectory: string
-}): Promise<RenderResult> {
+}): Promise<RenderedPlan[]> {
   const options = {
     cwd: workingDirectory,
     silent: true
@@ -192,13 +242,12 @@ export async function renderPlan({
     .getExecOutput(terraformCommand, ['show', '-no-color', planfile], options)
     .then((output) => output.stdout)
   try {
-    const renderedPlan = await renderTerraformPlan({
+    return await renderTerraformPlan({
       planfile,
       terraformCommand,
       options,
       humanReadablePlanfile
     })
-    return new RenderResult([renderedPlan])
   } catch (error) {
     if (error instanceof SyntaxError) {
       // if there is a SyntaxError while parsing JSON, there is a high chance that
@@ -211,5 +260,5 @@ export async function renderPlan({
       })
     }
   }
-  return new RenderResult([])
+  return []
 }

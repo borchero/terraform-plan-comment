@@ -8,6 +8,7 @@ export type RenderedPlan = {
   recreatedResources?: Record<string, string>
   deletedResources?: Record<string, string>
   ephemeralResources?: Record<string, string>
+  importedCount?: number
 }
 
 export type ResourceCounts = {
@@ -16,6 +17,7 @@ export type ResourceCounts = {
   recreated: number
   deleted: number
   ephemeral: number
+  imported: number
 }
 
 export function summarize(plans: RenderedPlan[]): ResourceCounts {
@@ -25,9 +27,10 @@ export function summarize(plans: RenderedPlan[]): ResourceCounts {
       updated: acc.updated + Object.keys(plan.updatedResources ?? {}).length,
       recreated: acc.recreated + Object.keys(plan.recreatedResources ?? {}).length,
       deleted: acc.deleted + Object.keys(plan.deletedResources ?? {}).length,
-      ephemeral: acc.ephemeral + Object.keys(plan.ephemeralResources ?? {}).length
+      ephemeral: acc.ephemeral + Object.keys(plan.ephemeralResources ?? {}).length,
+      imported: acc.imported + (plan.importedCount ?? 0)
     }),
-    { created: 0, updated: 0, recreated: 0, deleted: 0, ephemeral: 0 }
+    { created: 0, updated: 0, recreated: 0, deleted: 0, ephemeral: 0, imported: 0 }
   )
 }
 
@@ -37,7 +40,8 @@ export function summaryText(counts: ResourceCounts): string {
     `${counts.updated} to update, ` +
     `${counts.recreated} to re-create, ` +
     `${counts.deleted} to delete, ` +
-    `${counts.ephemeral} ephemeral.`
+    `${counts.ephemeral} ephemeral, ` +
+    `${counts.imported} to import.`
   )
 }
 
@@ -171,13 +175,17 @@ export function internalRenderPlan(
   const ephemeralResources = structuredPlan.resource_changes
     .filter((r) => r.change.actions.toString() === ['open'].toString())
     .map((r) => r.address)
+  const importedCount = structuredPlan.resource_changes.filter(
+    (r) => r.change.importing !== undefined
+  ).length
 
   return {
     createdResources: extractResources(createdResources, humanReadablePlan),
     updatedResources: extractResources(updatedResources, humanReadablePlan),
     recreatedResources: extractResources(recreatedResources, humanReadablePlan),
     deletedResources: extractResources(deletedResources, humanReadablePlan),
-    ephemeralResources: extractResources(ephemeralResources, humanReadablePlan)
+    ephemeralResources: extractResources(ephemeralResources, humanReadablePlan),
+    importedCount: importedCount > 0 ? importedCount : undefined
   }
 }
 

@@ -174,9 +174,10 @@ This action provides the following output:
 
 - `markdown`: The raw markdown output of the terraform plan
 - `empty`: Whether the terraform plan contains any change or not
-- `summary`: A summary of the changes
-- `create`: The number of resources to be created
-- `update`: The number of resources to be updated
-- `delete`: The number of resources to be deleted
-- `recreate`: The number of resources to be recreated
-- `ephemeral`: The number of ephemeral resources
+- `change-summary`: A human-readable summary of the resource changes
+- `num-resources-created`: The number of resources to be created
+- `num-resources-updated`: The number of resources to be updated
+- `num-resources-deleted`: The number of resources to be deleted
+- `num-resources-recreated`: The number of resources to be recreated
+- `num-resources-ephemeral`: The number of ephemeral resources
+- `num-resources-imported`: The number of resources to be imported

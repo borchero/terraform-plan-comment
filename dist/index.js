@@ -40266,7 +40266,8 @@ var planfileSchema = external_exports.object({
           external_exports.tuple([external_exports.literal("forget")]),
           external_exports.tuple([external_exports.literal("create"), external_exports.literal("forget")]),
           external_exports.tuple([external_exports.literal("open")])
-        ])
+        ]),
+        importing: external_exports.object({ id: external_exports.string() }).optional()
       })
     })
   ).optional()
@@ -40283,13 +40284,14 @@ function summarize(plans) {
       updated: acc.updated + Object.keys(plan.updatedResources ?? {}).length,
       recreated: acc.recreated + Object.keys(plan.recreatedResources ?? {}).length,
       deleted: acc.deleted + Object.keys(plan.deletedResources ?? {}).length,
-      ephemeral: acc.ephemeral + Object.keys(plan.ephemeralResources ?? {}).length
+      ephemeral: acc.ephemeral + Object.keys(plan.ephemeralResources ?? {}).length,
+      imported: acc.imported + (plan.importedCount ?? 0)
     }),
-    { created: 0, updated: 0, recreated: 0, deleted: 0, ephemeral: 0 }
+    { created: 0, updated: 0, recreated: 0, deleted: 0, ephemeral: 0, imported: 0 }
   );
 }
 function summaryText(counts) {
-  return `Resource Changes: ${counts.created} to create, ${counts.updated} to update, ${counts.recreated} to re-create, ${counts.deleted} to delete, ${counts.ephemeral} ephemeral.`;
+  return `Resource Changes: ${counts.created} to create, ${counts.updated} to update, ${counts.recreated} to re-create, ${counts.deleted} to delete, ${counts.ephemeral} ephemeral, ${counts.imported} to import.`;
 }
 function planIsEmpty(plan) {
   return !plan.createdResources && !plan.recreatedResources && !plan.updatedResources && !plan.deletedResources && !plan.ephemeralResources;
@@ -40366,12 +40368,16 @@ function internalRenderPlan(structuredPlan, humanReadablePlan) {
   ).map((r) => r.address);
   const deletedResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["delete"].toString()).map((r) => r.address);
   const ephemeralResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["open"].toString()).map((r) => r.address);
+  const importedCount = structuredPlan.resource_changes.filter(
+    (r) => r.change.importing !== void 0
+  ).length;
   return {
     createdResources: extractResources(createdResources, humanReadablePlan),
     updatedResources: extractResources(updatedResources, humanReadablePlan),
     recreatedResources: extractResources(recreatedResources, humanReadablePlan),
     deletedResources: extractResources(deletedResources, humanReadablePlan),
-    ephemeralResources: extractResources(ephemeralResources, humanReadablePlan)
+    ephemeralResources: extractResources(ephemeralResources, humanReadablePlan),
+    importedCount: importedCount > 0 ? importedCount : void 0
   };
 }
 async function renderTerraformPlan({
@@ -40582,12 +40588,13 @@ async function run() {
     setOutput("empty", plansAreEmpty(plans));
     return markdown;
   });
-  setOutput("summary", summaryText(counts));
-  setOutput("create", counts.created);
-  setOutput("update", counts.updated);
-  setOutput("delete", counts.deleted);
-  setOutput("recreate", counts.recreated);
-  setOutput("ephemeral", counts.ephemeral);
+  setOutput("change-summary", summaryText(counts));
+  setOutput("num-resources-created", counts.created);
+  setOutput("num-resources-updated", counts.updated);
+  setOutput("num-resources-deleted", counts.deleted);
+  setOutput("num-resources-recreated", counts.recreated);
+  setOutput("num-resources-ephemeral", counts.ephemeral);
+  setOutput("num-resources-imported", counts.imported);
   await group("Adding plan to step summary", async () => {
     await summary.addRaw(planMarkdown).write();
   });

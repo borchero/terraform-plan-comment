@@ -1,6 +1,6 @@
 ## 📝 Terragrunt Plan
 
-**→ Resource Changes: 1 to create, 0 to update, 0 to re-create, 0 to delete, 0 ephemeral.**
+**→ Resource Changes: 1 to create, 0 to update, 0 to re-create, 0 to delete, 0 ephemeral, 0 to import.**
 
 ### ✨ Create
 
@@ -22,7 +22,7 @@
 
 </details>
 
-**→ Resource Changes: 1 to create, 0 to update, 0 to re-create, 0 to delete, 0 ephemeral.**
+**→ Resource Changes: 1 to create, 0 to update, 0 to re-create, 0 to delete, 0 ephemeral, 0 to import.**
 
 ### ✨ Create
 
@@ -44,7 +44,7 @@
 
 </details>
 
-**→ Resource Changes: 1 to create, 0 to update, 0 to re-create, 0 to delete, 0 ephemeral.**
+**→ Resource Changes: 1 to create, 0 to update, 0 to re-create, 0 to delete, 0 ephemeral, 0 to import.**
 
 ### ✨ Create
 

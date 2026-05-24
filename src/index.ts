@@ -42,12 +42,13 @@ async function run() {
   })
 
   // 4) Set outputs for resource changes
-  core.setOutput('summary', summaryText(counts))
-  core.setOutput('create', counts.created)
-  core.setOutput('update', counts.updated)
-  core.setOutput('delete', counts.deleted)
-  core.setOutput('recreate', counts.recreated)
-  core.setOutput('ephemeral', counts.ephemeral)
+  core.setOutput('change-summary', summaryText(counts))
+  core.setOutput('num-resources-created', counts.created)
+  core.setOutput('num-resources-updated', counts.updated)
+  core.setOutput('num-resources-deleted', counts.deleted)
+  core.setOutput('num-resources-recreated', counts.recreated)
+  core.setOutput('num-resources-ephemeral', counts.ephemeral)
+  core.setOutput('num-resources-imported', counts.imported)
 
   // 5) Add plan to GitHub step summary
   await core.group('Adding plan to step summary', async () => {

@@ -23,6 +23,7 @@ test.each([
   'basic/2-delete',
   'basic/3-remove',
   'basic/4-empty',
+  'basic/7-create-hundreds',
   'ephemeral/0-create'
 ])('parse-successful', (arg) => {
   const planJson = JSON.parse(fs.readFileSync(`tests/fixtures/${arg}/plan.json`, 'utf-8'))

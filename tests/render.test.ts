@@ -10,9 +10,13 @@ afterEach(() => {
   mockedgetExecOutput?.mockReset()
 })
 
-test.each(['basic/0-create', 'basic/1-modify', 'basic/2-delete', 'basic/5-terragrunt'])(
-  'render terraform successful',
-  async (arg) => {
+test.each([
+  'basic/0-create',
+  'basic/1-modify',
+  'basic/2-delete',
+  'basic/5-terragrunt',
+  'basic/7-create-hundreds'
+])('render terraform successful', async (arg) => {
     const json = fs.readFileSync(`tests/fixtures/${arg}/plan.json`, 'utf-8')
     const plan = fs.readFileSync(`tests/fixtures/${arg}/plan.txt`, 'utf-8')
     mockedgetExecOutput.mockImplementationOnce(() =>

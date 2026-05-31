@@ -77,17 +77,63 @@ export function renderMarkdown({
   return `## ${header}\n\n${body.join('\n\n')}${footer}`
 }
 
+export function chunkComment(content: string, header: string, maxChunkSize = 65000): string[] {
+  const chunks: string[] = []
+  let remaining = content
+  let part = 1
+
+  while (true) {
+    if (remaining.length === 0) {
+      break
+    }
+
+    const prependedHeader = part > 1 ? `${header} (Part ${part})\n\n` : ''
+    const currentMax = maxChunkSize - prependedHeader.length
+
+    if (remaining.length <= currentMax) {
+      chunks.push(prependedHeader + remaining)
+      break
+    }
+
+    let splitIndex = remaining.lastIndexOf('</details>', currentMax - '</details>'.length)
+    if (splitIndex !== -1) {
+      splitIndex += '</details>'.length
+    } else {
+      splitIndex = remaining.lastIndexOf('\n\n', currentMax - 2)
+      if (splitIndex === -1) {
+        splitIndex = currentMax
+      }
+    }
+
+    if (splitIndex <= 0) {
+      splitIndex = Math.max(1, currentMax)
+    }
+
+    const chunk = prependedHeader + remaining.substring(0, splitIndex)
+    chunks.push(chunk)
+    remaining = remaining.substring(splitIndex).trimStart()
+    part++
+  }
+
+  return chunks
+}
+
 export async function createOrUpdateComment({
   octokit,
+  header,
   content,
   prNumber
 }: {
   octokit: InstanceType<typeof GitHub>
+  header: string
   content: string
   prNumber?: number
 }): Promise<void> {
   // Use provided PR number or fall back to context
   const issueNumber = prNumber ?? github.context.issue.number
+
+  // Chunk the content
+  const chunks = chunkComment(content, header, 65000)
 
   // Get all PR comments
   const comments = await octokit.paginate(octokit.rest.issues.listComments, {
@@ -96,28 +142,37 @@ export async function createOrUpdateComment({
     issue_number: issueNumber
   })
 
-  // Check if any comment already starts with the header that we expect. If so,
-  // let's update the comment with the new content.
-  const header = content.split('\n')[0]
-  for (const comment of comments) {
-    if (comment.body?.startsWith(header)) {
+  // Find all comments that start with the header
+  const existingComments = comments.filter((comment) => comment.body?.startsWith(header))
+
+  // Update or create comments for each chunk
+  for (let i = 0; i < chunks.length; i++) {
+    const chunkContent = chunks[i]
+    if (i < existingComments.length) {
       await octokit.rest.issues.updateComment({
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
-        comment_id: comment.id,
-        body: content
+        comment_id: existingComments[i].id,
+        body: chunkContent
       })
-      return
+    } else {
+      await octokit.rest.issues.createComment({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        issue_number: issueNumber,
+        body: chunkContent
+      })
     }
   }
 
-  // Otherwise, post a new comment.
-  await octokit.rest.issues.createComment({
-    owner: github.context.repo.owner,
-    repo: github.context.repo.repo,
-    issue_number: issueNumber,
-    body: content
-  })
+  // Delete any extra comments
+  for (let i = chunks.length; i < existingComments.length; i++) {
+    await octokit.rest.issues.deleteComment({
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      comment_id: existingComments[i].id
+    })
+  }
 }
 
 export async function deleteComment({
@@ -134,6 +189,7 @@ export async function deleteComment({
     issue_number: github.context.issue.number
   })
 
+  let deletedAny = false
   // Find and delete any comment that starts with the expected header
   for (const comment of comments) {
     if (comment.body?.startsWith(header)) {
@@ -142,9 +198,9 @@ export async function deleteComment({
         repo: github.context.repo.repo,
         comment_id: comment.id
       })
-      return true
+      deletedAny = true
     }
   }
 
-  return false
+  return deletedAny
 }

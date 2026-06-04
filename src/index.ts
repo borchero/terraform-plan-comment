@@ -61,6 +61,7 @@ async function run() {
     (inputs.prNumber || ['pull_request', 'pull_request_target'].includes(github.context.eventName))
   if (shouldPostComment) {
     if (!inputs.skipEmpty || !plansAreEmpty(plans)) {
+      // 6) Post comment with markdown (if applicable)
       await core.group('Render comment', () => {
         return createOrUpdateComment({
           octokit,

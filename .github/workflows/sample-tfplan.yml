@@ -19,7 +19,7 @@ jobs:
           terraform init
           terraform plan -out ${{ github.workspace }}/.planfile
       - name: Post PR comment
-        uses: aldwyn/terraform-plan-comment@e8659b9
+        uses: aldwyn/terraform-plan-comment@e8659b9950e558ee4fbb8b5360eabe8d4d116a6a
         with:
           token: ${{ github.token }}
           planfile: ${{ github.workspace }}.planfile

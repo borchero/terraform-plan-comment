@@ -14,11 +14,12 @@ jobs:
       - name: Setup terraform
         uses: hashicorp/setup-terraform@v3
       - name: Initialize
+        working-directory: tests/fixtures/basic/7-create-hundreds
         run: |
           terraform init
-          terraform plan -out .planfile
+          terraform plan -out ${{ github.workspace }}/.planfile
       - name: Post PR comment
-        uses: borchero/terraform-plan-comment@v2
+        uses: aldwyn/terraform-plan-comment@e8659b9
         with:
           token: ${{ github.token }}
-          planfile: .planfile
+          planfile: ${{ github.workspace }}.planfile

@@ -45,6 +45,7 @@ describe('chunkComment', () => {
     const content = fs.readFileSync(path.join(__dirname, 'fixtures/basic/7-create-hundreds/rendered.md'), 'utf-8')
     const chunks = chunkComment(content, header, 65000)
     expect(chunks.length).toBeGreaterThan(1)
+    console.log(chunks[0])
     for (const chunk of chunks) {
       expect(chunk.length).toBeLessThanOrEqual(65000)
     }

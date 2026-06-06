@@ -1,0 +1,24 @@
+name: Terrafom Plan
+on: pull_request
+
+env:
+  TG_NON_INTERACTIVE: "true"
+  TG_NO_COLOR: "true"
+  TG_ALL: "true"
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@v3
+      - name: Initialize
+        run: |
+          terraform init
+          terraform plan -out .planfile
+      - name: Post PR comment
+        uses: borchero/terraform-plan-comment@v2
+        with:
+          token: ${{ github.token }}
+          planfile: .planfile

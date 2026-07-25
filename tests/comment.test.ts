@@ -26,18 +26,19 @@ describe('chunkComment', () => {
 
     expect(chunks).toHaveLength(3)
     expect(chunks[0]).toBe('H (Part 1)\n\nLine 1\n\n*(continued in next comment)*')
-    expect(chunks[1]).toBe('H (Part 2)\n\nLine 2\n\nLine 3\n\nLine 4\n\nLine 5\n\nLine 6')
-    expect(chunks[2]).toBe('H (Part 3)\n\nLine 7')
+    expect(chunks[1]).toBe('H (Part 2)\n\nLine 2\n\n*(continued in next comment)*')
+    expect(chunks[2]).toBe('H (Part 3)\n\nLine 3\n\nLine 4\n\nLine 5\n\nLine 6\n\nLine 7')
   })
 
   test('hard splits if no suitable separator is found', () => {
     const content = 'H' + 'a'.repeat(80)
     const chunks = chunkComment(content, 'H', 58)
 
-    expect(chunks).toHaveLength(3)
+    expect(chunks).toHaveLength(4)
     expect(chunks[0]).toBe('H (Part 1)' + 'a'.repeat(17) + '\n\n*(continued in next comment)*')
-    expect(chunks[1]).toBe('H (Part 2)\n\n' + 'a'.repeat(46))
-    expect(chunks[2]).toBe('H (Part 3)\n\n' + 'a'.repeat(17))
+    expect(chunks[1]).toBe('H (Part 2)\n\n' + 'a'.repeat(15) + '\n\n*(continued in next comment)*')
+    expect(chunks[2]).toBe('H (Part 3)\n\n' + 'a'.repeat(15) + '\n\n*(continued in next comment)*')
+    expect(chunks[3]).toBe('H (Part 4)\n\n' + 'a'.repeat(33))
   })
 
   test('chunks real long body from 7-create-hundreds fixture', () => {

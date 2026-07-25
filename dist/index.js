@@ -41537,8 +41537,11 @@ function chunkComment(content, header, maxChunkSize = 65e3) {
 
 ` : "";
     let currentMax = maxChunkSize - prependedHeader.length;
-    if (part === 1 && remaining.length > currentMax) {
-      currentMax -= continuationNote.length + part1Suffix.length;
+    if (remaining.length > currentMax) {
+      currentMax -= continuationNote.length;
+      if (part === 1) {
+        currentMax -= part1Suffix.length;
+      }
     }
     if (remaining.length <= currentMax) {
       chunks.push(prependedHeader + remaining);
@@ -41557,8 +41560,8 @@ function chunkComment(content, header, maxChunkSize = 65e3) {
       splitIndex = Math.max(1, currentMax);
     }
     let chunk = prependedHeader + remaining.substring(0, splitIndex);
+    chunk += continuationNote;
     if (part === 1) {
-      chunk += continuationNote;
       if (chunk.startsWith(header)) {
         chunk = header + part1Suffix + chunk.substring(header.length);
       }

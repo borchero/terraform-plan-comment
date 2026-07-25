@@ -11,7 +11,7 @@ terraform {
 }
 
 resource "local_file" "test" {
-  for_each = toset([for i in range(200) : tostring(i)])
+  for_each = toset([for i in range(300) : tostring(i)])
   filename = "../test-${each.key}.txt"
   content  = "content-${each.key}"
 }

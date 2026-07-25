@@ -21,7 +21,7 @@ jobs:
           terraform init
           terraform plan -out .planfile
       - name: Post PR comment
-        uses: aldwyn/terraform-plan-comment@e8659b9950e558ee4fbb8b5360eabe8d4d116a6a
+        uses: aldwyn/terraform-plan-comment@b6133dc8668b5c47d9e7932e8918cca084e790e0
         with:
           token: ${{ github.token }}
           working-directory: tests/fixtures/basic/7-create-hundreds

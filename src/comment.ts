@@ -81,6 +81,8 @@ export function chunkComment(content: string, header: string, maxChunkSize = 650
   const chunks: string[] = []
   let remaining = content
   let part = 1
+  const continuationNote = '\n\n*(continued in next comment)*'
+  const part1Suffix = ' (Part 1)'
 
   while (true) {
     if (remaining.length === 0) {
@@ -88,7 +90,11 @@ export function chunkComment(content: string, header: string, maxChunkSize = 650
     }
 
     const prependedHeader = part > 1 ? `${header} (Part ${part})\n\n` : ''
-    const currentMax = maxChunkSize - prependedHeader.length
+    let currentMax = maxChunkSize - prependedHeader.length
+
+    if (part === 1 && remaining.length > currentMax) {
+      currentMax -= continuationNote.length + part1Suffix.length
+    }
 
     if (remaining.length <= currentMax) {
       chunks.push(prependedHeader + remaining)
@@ -109,7 +115,13 @@ export function chunkComment(content: string, header: string, maxChunkSize = 650
       splitIndex = Math.max(1, currentMax)
     }
 
-    const chunk = prependedHeader + remaining.substring(0, splitIndex)
+    let chunk = prependedHeader + remaining.substring(0, splitIndex)
+    if (part === 1) {
+      chunk += continuationNote
+      if (chunk.startsWith(header)) {
+        chunk = header + part1Suffix + chunk.substring(header.length)
+      }
+    }
     chunks.push(chunk)
     remaining = remaining.substring(splitIndex).trimStart()
     part++

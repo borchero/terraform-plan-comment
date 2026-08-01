@@ -53,6 +53,7 @@ run_step_terraform "$SCRIPT_DIR/basic/4-empty"
 run_step_terragrunt "$SCRIPT_DIR/basic/5-terragrunt"
 run_step_terragrunt "$SCRIPT_DIR/basic/6-terragrunt-multiplan"
 
+run_step_terraform "$SCRIPT_DIR/basic/7-create-hundreds"
 run_step_without_apply "$SCRIPT_DIR/ephemeral/0-create"
 
 find $SCRIPT_DIR -name '.tfstate*' -exec rm -f {} \+
@@ -60,3 +61,4 @@ find $SCRIPT_DIR -name '.terraform.lock.hcl' -exec rm -f {} \+
 find $SCRIPT_DIR -name '.terragrunt-cache' -exec rm -rf {} \+
 find $SCRIPT_DIR -name '.terraform' -exec rm -rf {} \+
 find $SCRIPT_DIR -name '.terraformrc' -exec rm -rf {} \+
+find $SCRIPT_DIR -name 'test*.txt' -exec rm -f {} \+

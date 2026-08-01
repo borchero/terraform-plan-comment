@@ -40503,35 +40503,94 @@ _Triggered by \`@${context2.actor}\``;
 
 ${body.join("\n\n")}${footer}`;
 }
+function chunkComment(content, header, maxChunkSize = 65e3) {
+  const chunks = [];
+  let remaining = content;
+  let part = 1;
+  const continuationNote = "\n\n*(continued in next comment)*";
+  const part1Suffix = " (Part 1)";
+  while (true) {
+    if (remaining.length === 0) {
+      break;
+    }
+    const prependedHeader = part > 1 ? `${header} (Part ${part})
+
+` : "";
+    let currentMax = maxChunkSize - prependedHeader.length;
+    if (remaining.length > currentMax) {
+      currentMax -= continuationNote.length;
+      if (part === 1) {
+        currentMax -= part1Suffix.length;
+      }
+    }
+    if (remaining.length <= currentMax) {
+      chunks.push(prependedHeader + remaining);
+      break;
+    }
+    let splitIndex = remaining.lastIndexOf("</details>", currentMax - "</details>".length);
+    if (splitIndex !== -1) {
+      splitIndex += "</details>".length;
+    } else {
+      splitIndex = remaining.lastIndexOf("\n\n", currentMax - 2);
+      if (splitIndex === -1) {
+        splitIndex = currentMax;
+      }
+    }
+    if (splitIndex <= 0) {
+      splitIndex = Math.max(1, currentMax);
+    }
+    let chunk = prependedHeader + remaining.substring(0, splitIndex);
+    chunk += continuationNote;
+    if (part === 1) {
+      if (chunk.startsWith(header)) {
+        chunk = header + part1Suffix + chunk.substring(header.length);
+      }
+    }
+    chunks.push(chunk);
+    remaining = remaining.substring(splitIndex).trimStart();
+    part++;
+  }
+  return chunks;
+}
 async function createOrUpdateComment({
   octokit,
+  header,
   content,
   prNumber
 }) {
   const issueNumber = prNumber ?? context2.issue.number;
+  const chunks = chunkComment(content, header, 65e3);
   const comments = await octokit.paginate(octokit.rest.issues.listComments, {
     owner: context2.repo.owner,
     repo: context2.repo.repo,
     issue_number: issueNumber
   });
-  const header = content.split("\n")[0];
-  for (const comment of comments) {
-    if (comment.body?.startsWith(header)) {
+  const existingComments = comments.filter((comment) => comment.body?.startsWith(header));
+  for (let i = 0; i < chunks.length; i++) {
+    const chunkContent = chunks[i];
+    if (i < existingComments.length) {
       await octokit.rest.issues.updateComment({
         owner: context2.repo.owner,
         repo: context2.repo.repo,
-        comment_id: comment.id,
-        body: content
+        comment_id: existingComments[i].id,
+        body: chunkContent
       });
-      return;
+    } else {
+      await octokit.rest.issues.createComment({
+        owner: context2.repo.owner,
+        repo: context2.repo.repo,
+        issue_number: issueNumber,
+        body: chunkContent
+      });
     }
   }
-  await octokit.rest.issues.createComment({
-    owner: context2.repo.owner,
-    repo: context2.repo.repo,
-    issue_number: issueNumber,
-    body: content
-  });
+  for (let i = chunks.length; i < existingComments.length; i++) {
+    await octokit.rest.issues.deleteComment({
+      owner: context2.repo.owner,
+      repo: context2.repo.repo,
+      comment_id: existingComments[i].id
+    });
+  }
 }
 async function deleteComment({
   octokit,
@@ -40542,6 +40601,7 @@ async function deleteComment({
     repo: context2.repo.repo,
     issue_number: context2.issue.number
   });
+  let deletedAny = false;
   for (const comment of comments) {
     if (comment.body?.startsWith(header)) {
       await octokit.rest.issues.deleteComment({
@@ -40549,10 +40609,10 @@ async function deleteComment({
         repo: context2.repo.repo,
         comment_id: comment.id
       });
-      return true;
+      deletedAny = true;
     }
   }
-  return false;
+  return deletedAny;
 }
 
 // src/index.ts
@@ -40603,7 +40663,12 @@ async function run() {
   if (shouldPostComment) {
     if (!inputs.skipEmpty || !plansAreEmpty(plans)) {
       await group("Render comment", () => {
-        return createOrUpdateComment({ octokit, content: planMarkdown, prNumber: inputs.prNumber });
+        return createOrUpdateComment({
+          octokit,
+          header: `## ${inputs.header}`,
+          content: planMarkdown,
+          prNumber: inputs.prNumber
+        });
       });
     } else {
       await group("Delete outdated comment", () => {

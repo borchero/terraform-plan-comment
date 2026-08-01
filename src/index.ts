@@ -61,9 +61,14 @@ async function run() {
     (inputs.prNumber || ['pull_request', 'pull_request_target'].includes(github.context.eventName))
   if (shouldPostComment) {
     if (!inputs.skipEmpty || !plansAreEmpty(plans)) {
-      // 5) Post comment with markdown (if applicable)
+      // 6) Post comment with markdown (if applicable)
       await core.group('Render comment', () => {
-        return createOrUpdateComment({ octokit, content: planMarkdown, prNumber: inputs.prNumber })
+        return createOrUpdateComment({
+          octokit,
+          header: `## ${inputs.header}`,
+          content: planMarkdown,
+          prNumber: inputs.prNumber
+        })
       })
     } else {
       // 6) Delete existing comment if plan is empty and skip-empty is enabled

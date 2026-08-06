@@ -181,3 +181,10 @@ This action provides the following output:
 - `num-resources-recreated`: The number of resources to be recreated
 - `num-resources-ephemeral`: The number of ephemeral resources
 - `num-resources-imported`: The number of resources to be imported
+- `num-resources-moved`: The number of resources to be moved to a new address
+- `num-resources-forgotten`: The number of resources to be removed from state without being destroyed
+
+Imports, moves and removals from state are counted independently of the resource actions, since Terraform can import,
+move or forget the same resource it also creates, updates or destroys. The two groups therefore overlap and must not be
+summed. `change-summary` reports them as two sentences (`Resource Changes: ...` and `State Changes: ...`) for that
+reason.

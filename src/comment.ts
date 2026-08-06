@@ -16,6 +16,22 @@ function renderResources(
   return result
 }
 
+function renderAddresses(addresses: string[]): string {
+  let result = ''
+  for (const address of [...addresses].sort()) {
+    result += `\n\n- \`${address}\``
+  }
+  return result
+}
+
+function renderMovedAddresses(moved: Record<string, string>): string {
+  let result = ''
+  for (const address of Object.keys(moved).sort()) {
+    result += `\n\n- \`${moved[address]}\` → \`${address}\``
+  }
+  return result
+}
+
 function renderBody(plan: RenderedPlan, options: { expandDetails: boolean }): string {
   if (planIsEmpty(plan)) {
     return ''
@@ -42,6 +58,20 @@ function renderBody(plan: RenderedPlan, options: { expandDetails: boolean }): st
   if (plan.ephemeralResources) {
     body += '\n\n### 👻 Ephemeral'
     body += renderResources(plan.ephemeralResources, options)
+  }
+
+  // State changes carry no diff to show, so they are listed by address instead of as <details>.
+  if (plan.importedResources) {
+    body += '\n\n### 📥 Import'
+    body += renderAddresses(plan.importedResources)
+  }
+  if (plan.movedResources) {
+    body += '\n\n### 🧭 Move'
+    body += renderMovedAddresses(plan.movedResources)
+  }
+  if (plan.forgottenResources) {
+    body += '\n\n### 📤 Remove From State'
+    body += renderAddresses(plan.forgottenResources)
   }
 
   return body

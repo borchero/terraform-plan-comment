@@ -8,7 +8,10 @@ export type RenderedPlan = {
   recreatedResources?: Record<string, string>
   deletedResources?: Record<string, string>
   ephemeralResources?: Record<string, string>
-  importedCount?: number
+  importedResources?: string[]
+  // Maps the new address of a moved resource to the address it moved from.
+  movedResources?: Record<string, string>
+  forgottenResources?: string[]
 }
 
 export type ResourceCounts = {
@@ -18,6 +21,8 @@ export type ResourceCounts = {
   deleted: number
   ephemeral: number
   imported: number
+  moved: number
+  forgotten: number
 }
 
 export function summarize(plans: RenderedPlan[]): ResourceCounts {
@@ -28,20 +33,36 @@ export function summarize(plans: RenderedPlan[]): ResourceCounts {
       recreated: acc.recreated + Object.keys(plan.recreatedResources ?? {}).length,
       deleted: acc.deleted + Object.keys(plan.deletedResources ?? {}).length,
       ephemeral: acc.ephemeral + Object.keys(plan.ephemeralResources ?? {}).length,
-      imported: acc.imported + (plan.importedCount ?? 0)
+      imported: acc.imported + (plan.importedResources ?? []).length,
+      moved: acc.moved + Object.keys(plan.movedResources ?? {}).length,
+      forgotten: acc.forgotten + (plan.forgottenResources ?? []).length
     }),
-    { created: 0, updated: 0, recreated: 0, deleted: 0, ephemeral: 0, imported: 0 }
+    {
+      created: 0,
+      updated: 0,
+      recreated: 0,
+      deleted: 0,
+      ephemeral: 0,
+      imported: 0,
+      moved: 0,
+      forgotten: 0
+    }
   )
 }
 
+// State changes are reported as a separate sentence because they are a different axis to the
+// resource actions, not a further partition of them: Terraform can import, move or forget the
+// same resource it also creates, updates or destroys, so the two groups must not be summed.
 export function summaryText(counts: ResourceCounts): string {
   return (
     `Resource Changes: ${counts.created} to create, ` +
     `${counts.updated} to update, ` +
     `${counts.recreated} to re-create, ` +
     `${counts.deleted} to delete, ` +
-    `${counts.ephemeral} ephemeral, ` +
-    `${counts.imported} to import.`
+    `${counts.ephemeral} ephemeral. ` +
+    `State Changes: ${counts.imported} to import, ` +
+    `${counts.moved} to move, ` +
+    `${counts.forgotten} to remove from state.`
   )
 }
 
@@ -51,7 +72,10 @@ export function planIsEmpty(plan: RenderedPlan): boolean {
     !plan.recreatedResources &&
     !plan.updatedResources &&
     !plan.deletedResources &&
-    !plan.ephemeralResources
+    !plan.ephemeralResources &&
+    !plan.importedResources &&
+    !plan.movedResources &&
+    !plan.forgottenResources
   )
 }
 
@@ -157,7 +181,11 @@ export function internalRenderPlan(
 
   // Partition changes for output formatting and extract resources
   const createdResources = structuredPlan.resource_changes
-    .filter((r) => r.change.actions.toString() === ['create'].toString())
+    .filter(
+      (r) =>
+        r.change.actions.toString() === ['create'].toString() ||
+        r.change.actions.toString() === ['create', 'forget'].toString()
+    )
     .map((r) => r.address)
   const updatedResources = structuredPlan.resource_changes
     .filter((r) => r.change.actions.toString() === ['update'].toString())
@@ -175,9 +203,27 @@ export function internalRenderPlan(
   const ephemeralResources = structuredPlan.resource_changes
     .filter((r) => r.change.actions.toString() === ['open'].toString())
     .map((r) => r.address)
-  const importedCount = structuredPlan.resource_changes.filter(
-    (r) => r.change.importing !== undefined
-  ).length
+  // A resource can be imported, moved or forgotten *and* changed, so these overlap with the
+  // action-based partitions above and are collected independently of them.
+  const importedResources = structuredPlan.resource_changes
+    .filter((r) => r.change.importing !== undefined)
+    .map((r) => r.address)
+  const movedResources = structuredPlan.resource_changes
+    .filter((r) => r.previous_address !== undefined)
+    .reduce(
+      (acc, r) => {
+        acc[r.address] = r.previous_address as string
+        return acc
+      },
+      {} as Record<string, string>
+    )
+  const forgottenResources = structuredPlan.resource_changes
+    .filter(
+      (r) =>
+        r.change.actions.toString() === ['forget'].toString() ||
+        r.change.actions.toString() === ['create', 'forget'].toString()
+    )
+    .map((r) => r.address)
 
   return {
     createdResources: extractResources(createdResources, humanReadablePlan),
@@ -185,7 +231,9 @@ export function internalRenderPlan(
     recreatedResources: extractResources(recreatedResources, humanReadablePlan),
     deletedResources: extractResources(deletedResources, humanReadablePlan),
     ephemeralResources: extractResources(ephemeralResources, humanReadablePlan),
-    importedCount: importedCount > 0 ? importedCount : undefined
+    importedResources: importedResources.length > 0 ? importedResources : undefined,
+    movedResources: Object.keys(movedResources).length > 0 ? movedResources : undefined,
+    forgottenResources: forgottenResources.length > 0 ? forgottenResources : undefined
   }
 }
 

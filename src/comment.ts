@@ -16,6 +16,19 @@ function renderResources(
   return result
 }
 
+function inlineCode(value: string): string {
+  return `\`${value}\``
+}
+
+// Sorting the rendered items keeps the list ordered by the address it leads with.
+function renderList(items: string[]): string {
+  let result = ''
+  for (const item of [...items].sort()) {
+    result += `\n\n- ${item}`
+  }
+  return result
+}
+
 function renderBody(plan: RenderedPlan, options: { expandDetails: boolean }): string {
   if (planIsEmpty(plan)) {
     return ''
@@ -42,6 +55,24 @@ function renderBody(plan: RenderedPlan, options: { expandDetails: boolean }): st
   if (plan.ephemeralResources) {
     body += '\n\n### 👻 Ephemeral'
     body += renderResources(plan.ephemeralResources, options)
+  }
+
+  // State changes carry no diff to show, so they are listed by address instead of as <details>.
+  if (plan.importedResources) {
+    body += '\n\n### 📥 Import'
+    body += renderList(plan.importedResources.map(inlineCode))
+  }
+  if (plan.movedResources) {
+    body += '\n\n### 🧭 Move'
+    body += renderList(
+      Object.entries(plan.movedResources).map(
+        ([to, from]) => `${inlineCode(from)} → ${inlineCode(to)}`
+      )
+    )
+  }
+  if (plan.forgottenResources) {
+    body += '\n\n### 📤 Remove From State'
+    body += renderList(plan.forgottenResources.map(inlineCode))
   }
 
   return body

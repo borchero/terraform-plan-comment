@@ -50,17 +50,18 @@ export function summarize(plans: RenderedPlan[]): ResourceCounts {
   )
 }
 
-// State changes are reported as a separate sentence because they are a different axis to the
-// resource actions, not a further partition of them: Terraform can import, move or forget the
-// same resource it also creates, updates or destroys, so the two groups must not be summed.
 export function summaryText(counts: ResourceCounts): string {
-  return (
+  const resourceChanges =
     `Resource Changes: ${counts.created} to create, ` +
     `${counts.updated} to update, ` +
     `${counts.recreated} to re-create, ` +
     `${counts.deleted} to delete, ` +
-    `${counts.ephemeral} ephemeral. ` +
-    `State Changes: ${counts.imported} to import, ` +
+    `${counts.ephemeral} ephemeral.`
+  if (counts.imported + counts.moved + counts.forgotten === 0) {
+    return resourceChanges
+  }
+  return (
+    `${resourceChanges} State Changes: ${counts.imported} to import, ` +
     `${counts.moved} to move, ` +
     `${counts.forgotten} to remove from state.`
   )
@@ -90,17 +91,36 @@ type ResourceContent = {
 
 const TERRAFORM_DIFF_INDENTATION = 4
 
+// Terraform starts the resource block with an action symbol whose last character is one of these,
+// e.g. `  +`, `  ~`, `-/+`, ` .` or ` +/.` (see `internal/command/format.DiffActionSymbol`). The
+// symbol is anchored to the start of the line so that comments mentioning a resource in prose are
+// not mistaken for it.
+const RESOURCE_BLOCK_LINE = /^ *[-+~.<=/?⇄]{1,4} (resource|ephemeral)/
+
+function isResourceHeader(line: string, name: string): boolean {
+  // Terraform indents the comment by two spaces, but its `forget` and `create`-then-`forget`
+  // branches hardcode a single space instead.
+  for (const indent of ['  ', ' ']) {
+    const header = `${indent}# ${name}`
+    // The address has to end here, otherwise `local_file.test` matches `local_file.test2` too.
+    if (line === header || line.startsWith(`${header} `)) {
+      return true
+    }
+  }
+  return false
+}
+
 function extractResourceContent(name: string, humanReadablePlan: string): ResourceContent {
   const lines = humanReadablePlan.split('\n')
 
   // In the plan, find the resource with the appropriate name
-  const resourceHeaderIndex = lines.findIndex((line) => line.startsWith(`  # ${name}`))
+  const resourceHeaderIndex = lines.findIndex((line) => isResourceHeader(line, name))
   if (resourceHeaderIndex < 0) {
     throw Error(`Resource '${name}' is modified but cannot be found in human-readable plan.`)
   }
   let resourceLineIndex = lines
     .slice(resourceHeaderIndex)
-    .findIndex((line) => line.match(/.*[+-~⇄] (resource|ephemeral)/))
+    .findIndex((line) => line.match(RESOURCE_BLOCK_LINE))
   if (resourceLineIndex < 0) {
     throw Error(`Resource block cannot be found for resource '${name}'.`)
   }

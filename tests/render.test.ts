@@ -113,13 +113,64 @@ describe('internalRenderPlan state changes', () => {
     expect(Object.keys(plan.deletedResources ?? {})).toEqual(['local_file.b'])
   })
 
+  // Terraform renders `create`-then-`forget` with the ` +/.` action symbol and, unlike most
+  // actions, a single-space `#` comment.
+  const createThenForgetPlan = [
+    ' # local_file.a must be replaced, but the existing object will not be destroyed',
+    ' # (destroy = false is set in the configuration)',
+    ' +/. resource "local_file" "a" {',
+    '      ~ filename = "./a.txt" -> "./b.txt" # forces replacement',
+    '      ~ id       = "8843d7f92416211de9ebb963ff4ce28125932878" -> (known after apply)',
+    '    }',
+    ''
+  ].join('\n')
+
   test('a create-then-forget resource counts as both created and removed from state', () => {
     const plan = render(
       [{ address: 'local_file.a', change: { actions: ['create', 'forget'] } }],
-      '  # local_file.a will be created\n  + resource "local_file" "a" {\n      x = 1\n    }\n'
+      createThenForgetPlan
     )
     expect(plan.forgottenResources).toEqual(['local_file.a'])
     expect(Object.keys(plan.createdResources ?? {})).toEqual(['local_file.a'])
+    expect(plan.createdResources?.['local_file.a']).toContain(
+      '! filename = "./a.txt" -> "./b.txt" # forces replacement'
+    )
+  })
+
+  test('a resource is not extracted from the block of a longer address', () => {
+    const plan = render(
+      [{ address: 'local_file.a', change: { actions: ['create'] } }],
+      [
+        ' # local_file.ab will no longer be managed by Terraform, but will not be destroyed',
+        ' # (destroy = false is set in the configuration)',
+        ' . resource "local_file" "ab" {',
+        '        id = "forgotten"',
+        '    }',
+        '',
+        '  # local_file.a will be created',
+        '  + resource "local_file" "a" {',
+        '      + id = "created"',
+        '    }',
+        ''
+      ].join('\n')
+    )
+    expect(plan.createdResources?.['local_file.a']).toContain('+ id = "created"')
+    expect(plan.createdResources?.['local_file.a']).not.toContain('forgotten')
+  })
+
+  test('a reason mentioning a resource is not mistaken for the resource block', () => {
+    const plan = render(
+      [{ address: 'local_file.a', change: { actions: ['delete'] } }],
+      [
+        '  # local_file.a will be destroyed',
+        '  # (because the parent resource is being destroyed)',
+        '  - resource "local_file" "a" {',
+        '      - id = "gone"',
+        '    }',
+        ''
+      ].join('\n')
+    )
+    expect(plan.deletedResources?.['local_file.a']).toContain('```diff\n- id = "gone"\n```')
   })
 
   test('a plan with no state changes leaves the state fields undefined', () => {

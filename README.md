@@ -186,5 +186,5 @@ This action provides the following output:
 
 Imports, moves and removals from state are counted independently of the resource actions, since Terraform can import,
 move or forget the same resource it also creates, updates or destroys. The two groups therefore overlap and must not be
-summed. `change-summary` reports them as two sentences (`Resource Changes: ...` and `State Changes: ...`) for that
-reason.
+summed. `change-summary` reports them in a separate `State Changes: ...` sentence for that reason, which is appended to
+the `Resource Changes: ...` sentence only when the plan actually contains imports, moves or removals from state.

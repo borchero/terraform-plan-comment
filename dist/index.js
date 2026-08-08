@@ -40303,7 +40303,11 @@ function summarize(plans) {
   );
 }
 function summaryText(counts) {
-  return `Resource Changes: ${counts.created} to create, ${counts.updated} to update, ${counts.recreated} to re-create, ${counts.deleted} to delete, ${counts.ephemeral} ephemeral. State Changes: ${counts.imported} to import, ${counts.moved} to move, ${counts.forgotten} to remove from state.`;
+  const resourceChanges = `Resource Changes: ${counts.created} to create, ${counts.updated} to update, ${counts.recreated} to re-create, ${counts.deleted} to delete, ${counts.ephemeral} ephemeral.`;
+  if (counts.imported + counts.moved + counts.forgotten === 0) {
+    return resourceChanges;
+  }
+  return `${resourceChanges} State Changes: ${counts.imported} to import, ${counts.moved} to move, ${counts.forgotten} to remove from state.`;
 }
 function planIsEmpty(plan) {
   return !plan.createdResources && !plan.recreatedResources && !plan.updatedResources && !plan.deletedResources && !plan.ephemeralResources && !plan.importedResources && !plan.movedResources && !plan.forgottenResources;
@@ -40312,13 +40316,23 @@ function plansAreEmpty(plans) {
   return plans.every(planIsEmpty);
 }
 var TERRAFORM_DIFF_INDENTATION = 4;
+var RESOURCE_BLOCK_LINE = /^ *[-+~.<=/?⇄]{1,4} (resource|ephemeral)/;
+function isResourceHeader(line, name) {
+  for (const indent of ["  ", " "]) {
+    const header = `${indent}# ${name}`;
+    if (line === header || line.startsWith(`${header} `)) {
+      return true;
+    }
+  }
+  return false;
+}
 function extractResourceContent(name, humanReadablePlan) {
   const lines = humanReadablePlan.split("\n");
-  const resourceHeaderIndex = lines.findIndex((line) => line.startsWith(`  # ${name}`));
+  const resourceHeaderIndex = lines.findIndex((line) => isResourceHeader(line, name));
   if (resourceHeaderIndex < 0) {
     throw Error(`Resource '${name}' is modified but cannot be found in human-readable plan.`);
   }
-  let resourceLineIndex = lines.slice(resourceHeaderIndex).findIndex((line) => line.match(/.*[+-~⇄] (resource|ephemeral)/));
+  let resourceLineIndex = lines.slice(resourceHeaderIndex).findIndex((line) => line.match(RESOURCE_BLOCK_LINE));
   if (resourceLineIndex < 0) {
     throw Error(`Resource block cannot be found for resource '${name}'.`);
   }
@@ -40474,21 +40488,15 @@ ${content}
   }
   return result;
 }
-function renderAddresses(addresses) {
-  let result = "";
-  for (const address of [...addresses].sort()) {
-    result += `
-
-- \`${address}\``;
-  }
-  return result;
+function inlineCode(value) {
+  return `\`${value}\``;
 }
-function renderMovedAddresses(moved) {
+function renderList(items) {
   let result = "";
-  for (const address of Object.keys(moved).sort()) {
+  for (const item of [...items].sort()) {
     result += `
 
-- \`${moved[address]}\` \u2192 \`${address}\``;
+- ${item}`;
   }
   return result;
 }
@@ -40519,15 +40527,19 @@ function renderBody(plan, options) {
   }
   if (plan.importedResources) {
     body += "\n\n### \u{1F4E5} Import";
-    body += renderAddresses(plan.importedResources);
+    body += renderList(plan.importedResources.map(inlineCode));
   }
   if (plan.movedResources) {
     body += "\n\n### \u{1F9ED} Move";
-    body += renderMovedAddresses(plan.movedResources);
+    body += renderList(
+      Object.entries(plan.movedResources).map(
+        ([to, from]) => `${inlineCode(from)} \u2192 ${inlineCode(to)}`
+      )
+    );
   }
   if (plan.forgottenResources) {
     body += "\n\n### \u{1F4E4} Remove From State";
-    body += renderAddresses(plan.forgottenResources);
+    body += renderList(plan.forgottenResources.map(inlineCode));
   }
   return body;
 }

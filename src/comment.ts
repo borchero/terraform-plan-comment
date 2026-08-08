@@ -16,18 +16,15 @@ function renderResources(
   return result
 }
 
-function renderAddresses(addresses: string[]): string {
-  let result = ''
-  for (const address of [...addresses].sort()) {
-    result += `\n\n- \`${address}\``
-  }
-  return result
+function inlineCode(value: string): string {
+  return `\`${value}\``
 }
 
-function renderMovedAddresses(moved: Record<string, string>): string {
+// Sorting the rendered items keeps the list ordered by the address it leads with.
+function renderList(items: string[]): string {
   let result = ''
-  for (const address of Object.keys(moved).sort()) {
-    result += `\n\n- \`${moved[address]}\` → \`${address}\``
+  for (const item of [...items].sort()) {
+    result += `\n\n- ${item}`
   }
   return result
 }
@@ -63,15 +60,19 @@ function renderBody(plan: RenderedPlan, options: { expandDetails: boolean }): st
   // State changes carry no diff to show, so they are listed by address instead of as <details>.
   if (plan.importedResources) {
     body += '\n\n### 📥 Import'
-    body += renderAddresses(plan.importedResources)
+    body += renderList(plan.importedResources.map(inlineCode))
   }
   if (plan.movedResources) {
     body += '\n\n### 🧭 Move'
-    body += renderMovedAddresses(plan.movedResources)
+    body += renderList(
+      Object.entries(plan.movedResources).map(
+        ([to, from]) => `${inlineCode(from)} → ${inlineCode(to)}`
+      )
+    )
   }
   if (plan.forgottenResources) {
     body += '\n\n### 📤 Remove From State'
-    body += renderAddresses(plan.forgottenResources)
+    body += renderList(plan.forgottenResources.map(inlineCode))
   }
 
   return body

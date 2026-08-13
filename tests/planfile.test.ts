@@ -28,5 +28,6 @@ test('parse import without id', () => {
       ]
     })
   )
-  parsePlanfileJSON(data)
+  const planfile = parsePlanfileJSON(data)
+  expect(planfile.resource_changes?.[0].change.importing).toEqual({})
 })

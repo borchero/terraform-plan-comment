@@ -40267,7 +40267,7 @@ var planfileSchema = external_exports.object({
           external_exports.tuple([external_exports.literal("create"), external_exports.literal("forget")]),
           external_exports.tuple([external_exports.literal("open")])
         ]),
-        importing: external_exports.object({ id: external_exports.string() }).optional()
+        importing: external_exports.object({ id: external_exports.string().optional() }).optional()
       })
     })
   ).optional()

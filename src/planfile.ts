@@ -28,7 +28,7 @@ const planfileSchema = z.object({
             z.tuple([z.literal('create'), z.literal('forget')]),
             z.tuple([z.literal('open')])
           ]),
-          importing: z.object({ id: z.string() }).optional()
+          importing: z.object({ id: z.string().optional() }).optional()
         })
       })
     )

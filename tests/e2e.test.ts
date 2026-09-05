@@ -24,7 +24,10 @@ test.each([
   'basic/3-remove',
   'basic/4-empty',
   'basic/7-create-hundreds',
-  'ephemeral/0-create'
+  'ephemeral/0-create',
+  'import/0-import',
+  'move/0-create',
+  'move/1-move'
 ])('parse-successful', (arg) => {
   const planJson = JSON.parse(fs.readFileSync(`tests/fixtures/${arg}/plan.json`, 'utf-8'))
   const planTxt = fs.readFileSync(`tests/fixtures/${arg}/plan.txt`, 'utf-8')

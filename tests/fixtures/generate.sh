@@ -55,6 +55,10 @@ run_step_terragrunt "$SCRIPT_DIR/basic/6-terragrunt-multiplan"
 
 run_step_terraform "$SCRIPT_DIR/basic/7-create-hundreds"
 run_step_without_apply "$SCRIPT_DIR/ephemeral/0-create"
+run_step_without_apply "$SCRIPT_DIR/import/0-import"
+
+run_step_terraform "$SCRIPT_DIR/move/0-create"
+run_step_without_apply "$SCRIPT_DIR/move/1-move"
 
 find $SCRIPT_DIR -name '.tfstate*' -exec rm -f {} \+
 find $SCRIPT_DIR -name '.terraform.lock.hcl' -exec rm -f {} \+

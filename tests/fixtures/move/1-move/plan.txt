@@ -1,0 +1,10 @@
+
+Terraform will perform the following actions:
+
+  # local_file.before has moved to local_file.after
+    resource "local_file" "after" {
+        id                   = "8843d7f92416211de9ebb963ff4ce28125932878"
+        # (10 unchanged attributes hidden)
+    }
+
+Plan: 0 to add, 0 to change, 0 to destroy.

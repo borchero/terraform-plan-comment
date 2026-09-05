@@ -40254,6 +40254,7 @@ var planfileSchema = external_exports.object({
   resource_changes: external_exports.array(
     external_exports.object({
       address: external_exports.string(),
+      previous_address: external_exports.string().optional(),
       change: external_exports.object({
         actions: external_exports.union([
           external_exports.tuple([external_exports.literal("no-op")]),
@@ -40285,28 +40286,53 @@ function summarize(plans) {
       recreated: acc.recreated + Object.keys(plan.recreatedResources ?? {}).length,
       deleted: acc.deleted + Object.keys(plan.deletedResources ?? {}).length,
       ephemeral: acc.ephemeral + Object.keys(plan.ephemeralResources ?? {}).length,
-      imported: acc.imported + (plan.importedCount ?? 0)
+      imported: acc.imported + (plan.importedResources ?? []).length,
+      moved: acc.moved + Object.keys(plan.movedResources ?? {}).length,
+      forgotten: acc.forgotten + (plan.forgottenResources ?? []).length
     }),
-    { created: 0, updated: 0, recreated: 0, deleted: 0, ephemeral: 0, imported: 0 }
+    {
+      created: 0,
+      updated: 0,
+      recreated: 0,
+      deleted: 0,
+      ephemeral: 0,
+      imported: 0,
+      moved: 0,
+      forgotten: 0
+    }
   );
 }
 function summaryText(counts) {
-  return `Resource Changes: ${counts.created} to create, ${counts.updated} to update, ${counts.recreated} to re-create, ${counts.deleted} to delete, ${counts.ephemeral} ephemeral, ${counts.imported} to import.`;
+  const resourceChanges = `Resource Changes: ${counts.created} to create, ${counts.updated} to update, ${counts.recreated} to re-create, ${counts.deleted} to delete, ${counts.ephemeral} ephemeral.`;
+  if (counts.imported + counts.moved + counts.forgotten === 0) {
+    return resourceChanges;
+  }
+  return `${resourceChanges} State Changes: ${counts.imported} to import, ${counts.moved} to move, ${counts.forgotten} to remove from state.`;
 }
 function planIsEmpty(plan) {
-  return !plan.createdResources && !plan.recreatedResources && !plan.updatedResources && !plan.deletedResources && !plan.ephemeralResources;
+  return !plan.createdResources && !plan.recreatedResources && !plan.updatedResources && !plan.deletedResources && !plan.ephemeralResources && !plan.importedResources && !plan.movedResources && !plan.forgottenResources;
 }
 function plansAreEmpty(plans) {
   return plans.every(planIsEmpty);
 }
 var TERRAFORM_DIFF_INDENTATION = 4;
+var RESOURCE_BLOCK_LINE = /^ *[-+~.<=/?⇄]{1,4} (resource|ephemeral)/;
+function isResourceHeader(line, name) {
+  for (const indent of ["  ", " "]) {
+    const header = `${indent}# ${name}`;
+    if (line === header || line.startsWith(`${header} `)) {
+      return true;
+    }
+  }
+  return false;
+}
 function extractResourceContent(name, humanReadablePlan) {
   const lines = humanReadablePlan.split("\n");
-  const resourceHeaderIndex = lines.findIndex((line) => line.startsWith(`  # ${name}`));
+  const resourceHeaderIndex = lines.findIndex((line) => isResourceHeader(line, name));
   if (resourceHeaderIndex < 0) {
     throw Error(`Resource '${name}' is modified but cannot be found in human-readable plan.`);
   }
-  let resourceLineIndex = lines.slice(resourceHeaderIndex).findIndex((line) => line.match(/.*[+-~⇄] (resource|ephemeral)/));
+  let resourceLineIndex = lines.slice(resourceHeaderIndex).findIndex((line) => line.match(RESOURCE_BLOCK_LINE));
   if (resourceLineIndex < 0) {
     throw Error(`Resource block cannot be found for resource '${name}'.`);
   }
@@ -40361,23 +40387,35 @@ function internalRenderPlan(structuredPlan, humanReadablePlan) {
   if (structuredPlan.resource_changes === void 0 || structuredPlan.resource_changes.length === 0) {
     return {};
   }
-  const createdResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["create"].toString()).map((r) => r.address);
+  const createdResources = structuredPlan.resource_changes.filter(
+    (r) => r.change.actions.toString() === ["create"].toString() || r.change.actions.toString() === ["create", "forget"].toString()
+  ).map((r) => r.address);
   const updatedResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["update"].toString()).map((r) => r.address);
   const recreatedResources = structuredPlan.resource_changes.filter(
     (r) => r.change.actions.toString() === ["delete", "create"].toString() || r.change.actions.toString() === ["create", "delete"].toString()
   ).map((r) => r.address);
   const deletedResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["delete"].toString()).map((r) => r.address);
   const ephemeralResources = structuredPlan.resource_changes.filter((r) => r.change.actions.toString() === ["open"].toString()).map((r) => r.address);
-  const importedCount = structuredPlan.resource_changes.filter(
-    (r) => r.change.importing !== void 0
-  ).length;
+  const importedResources = structuredPlan.resource_changes.filter((r) => r.change.importing !== void 0).map((r) => r.address);
+  const movedResources = structuredPlan.resource_changes.filter((r) => r.previous_address !== void 0).reduce(
+    (acc, r) => {
+      acc[r.address] = r.previous_address;
+      return acc;
+    },
+    {}
+  );
+  const forgottenResources = structuredPlan.resource_changes.filter(
+    (r) => r.change.actions.toString() === ["forget"].toString() || r.change.actions.toString() === ["create", "forget"].toString()
+  ).map((r) => r.address);
   return {
     createdResources: extractResources(createdResources, humanReadablePlan),
     updatedResources: extractResources(updatedResources, humanReadablePlan),
     recreatedResources: extractResources(recreatedResources, humanReadablePlan),
     deletedResources: extractResources(deletedResources, humanReadablePlan),
     ephemeralResources: extractResources(ephemeralResources, humanReadablePlan),
-    importedCount: importedCount > 0 ? importedCount : void 0
+    importedResources: importedResources.length > 0 ? importedResources : void 0,
+    movedResources: Object.keys(movedResources).length > 0 ? movedResources : void 0,
+    forgottenResources: forgottenResources.length > 0 ? forgottenResources : void 0
   };
 }
 async function renderTerraformPlan({
@@ -40450,6 +40488,18 @@ ${content}
   }
   return result;
 }
+function inlineCode(value) {
+  return `\`${value}\``;
+}
+function renderList(items) {
+  let result = "";
+  for (const item of [...items].sort()) {
+    result += `
+
+- ${item}`;
+  }
+  return result;
+}
 function renderBody(plan, options) {
   if (planIsEmpty(plan)) {
     return "";
@@ -40474,6 +40524,22 @@ function renderBody(plan, options) {
   if (plan.ephemeralResources) {
     body += "\n\n### \u{1F47B} Ephemeral";
     body += renderResources(plan.ephemeralResources, options);
+  }
+  if (plan.importedResources) {
+    body += "\n\n### \u{1F4E5} Import";
+    body += renderList(plan.importedResources.map(inlineCode));
+  }
+  if (plan.movedResources) {
+    body += "\n\n### \u{1F9ED} Move";
+    body += renderList(
+      Object.entries(plan.movedResources).map(
+        ([to, from]) => `${inlineCode(from)} \u2192 ${inlineCode(to)}`
+      )
+    );
+  }
+  if (plan.forgottenResources) {
+    body += "\n\n### \u{1F4E4} Remove From State";
+    body += renderList(plan.forgottenResources.map(inlineCode));
   }
   return body;
 }
@@ -40656,6 +40722,8 @@ async function run() {
   setOutput("num-resources-recreated", counts.recreated);
   setOutput("num-resources-ephemeral", counts.ephemeral);
   setOutput("num-resources-imported", counts.imported);
+  setOutput("num-resources-moved", counts.moved);
+  setOutput("num-resources-forgotten", counts.forgotten);
   await group("Adding plan to step summary", async () => {
     await summary.addRaw(planMarkdown).write();
   });

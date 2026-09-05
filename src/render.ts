@@ -8,7 +8,10 @@ export type RenderedPlan = {
   recreatedResources?: Record<string, string>
   deletedResources?: Record<string, string>
   ephemeralResources?: Record<string, string>
-  importedCount?: number
+  importedResources?: string[]
+  // Maps the new address of a moved resource to the address it moved from.
+  movedResources?: Record<string, string>
+  forgottenResources?: string[]
 }
 
 export type ResourceCounts = {
@@ -18,6 +21,8 @@ export type ResourceCounts = {
   deleted: number
   ephemeral: number
   imported: number
+  moved: number
+  forgotten: number
 }
 
 export function summarize(plans: RenderedPlan[]): ResourceCounts {
@@ -28,20 +33,37 @@ export function summarize(plans: RenderedPlan[]): ResourceCounts {
       recreated: acc.recreated + Object.keys(plan.recreatedResources ?? {}).length,
       deleted: acc.deleted + Object.keys(plan.deletedResources ?? {}).length,
       ephemeral: acc.ephemeral + Object.keys(plan.ephemeralResources ?? {}).length,
-      imported: acc.imported + (plan.importedCount ?? 0)
+      imported: acc.imported + (plan.importedResources ?? []).length,
+      moved: acc.moved + Object.keys(plan.movedResources ?? {}).length,
+      forgotten: acc.forgotten + (plan.forgottenResources ?? []).length
     }),
-    { created: 0, updated: 0, recreated: 0, deleted: 0, ephemeral: 0, imported: 0 }
+    {
+      created: 0,
+      updated: 0,
+      recreated: 0,
+      deleted: 0,
+      ephemeral: 0,
+      imported: 0,
+      moved: 0,
+      forgotten: 0
+    }
   )
 }
 
 export function summaryText(counts: ResourceCounts): string {
-  return (
+  const resourceChanges =
     `Resource Changes: ${counts.created} to create, ` +
     `${counts.updated} to update, ` +
     `${counts.recreated} to re-create, ` +
     `${counts.deleted} to delete, ` +
-    `${counts.ephemeral} ephemeral, ` +
-    `${counts.imported} to import.`
+    `${counts.ephemeral} ephemeral.`
+  if (counts.imported + counts.moved + counts.forgotten === 0) {
+    return resourceChanges
+  }
+  return (
+    `${resourceChanges} State Changes: ${counts.imported} to import, ` +
+    `${counts.moved} to move, ` +
+    `${counts.forgotten} to remove from state.`
   )
 }
 
@@ -51,7 +73,10 @@ export function planIsEmpty(plan: RenderedPlan): boolean {
     !plan.recreatedResources &&
     !plan.updatedResources &&
     !plan.deletedResources &&
-    !plan.ephemeralResources
+    !plan.ephemeralResources &&
+    !plan.importedResources &&
+    !plan.movedResources &&
+    !plan.forgottenResources
   )
 }
 
@@ -66,17 +91,36 @@ type ResourceContent = {
 
 const TERRAFORM_DIFF_INDENTATION = 4
 
+// Terraform starts the resource block with an action symbol whose last character is one of these,
+// e.g. `  +`, `  ~`, `-/+`, ` .` or ` +/.` (see `internal/command/format.DiffActionSymbol`). The
+// symbol is anchored to the start of the line so that comments mentioning a resource in prose are
+// not mistaken for it.
+const RESOURCE_BLOCK_LINE = /^ *[-+~.<=/?⇄]{1,4} (resource|ephemeral)/
+
+function isResourceHeader(line: string, name: string): boolean {
+  // Terraform indents the comment by two spaces, but its `forget` and `create`-then-`forget`
+  // branches hardcode a single space instead.
+  for (const indent of ['  ', ' ']) {
+    const header = `${indent}# ${name}`
+    // The address has to end here, otherwise `local_file.test` matches `local_file.test2` too.
+    if (line === header || line.startsWith(`${header} `)) {
+      return true
+    }
+  }
+  return false
+}
+
 function extractResourceContent(name: string, humanReadablePlan: string): ResourceContent {
   const lines = humanReadablePlan.split('\n')
 
   // In the plan, find the resource with the appropriate name
-  const resourceHeaderIndex = lines.findIndex((line) => line.startsWith(`  # ${name}`))
+  const resourceHeaderIndex = lines.findIndex((line) => isResourceHeader(line, name))
   if (resourceHeaderIndex < 0) {
     throw Error(`Resource '${name}' is modified but cannot be found in human-readable plan.`)
   }
   let resourceLineIndex = lines
     .slice(resourceHeaderIndex)
-    .findIndex((line) => line.match(/.*[+-~⇄] (resource|ephemeral)/))
+    .findIndex((line) => line.match(RESOURCE_BLOCK_LINE))
   if (resourceLineIndex < 0) {
     throw Error(`Resource block cannot be found for resource '${name}'.`)
   }
@@ -157,7 +201,11 @@ export function internalRenderPlan(
 
   // Partition changes for output formatting and extract resources
   const createdResources = structuredPlan.resource_changes
-    .filter((r) => r.change.actions.toString() === ['create'].toString())
+    .filter(
+      (r) =>
+        r.change.actions.toString() === ['create'].toString() ||
+        r.change.actions.toString() === ['create', 'forget'].toString()
+    )
     .map((r) => r.address)
   const updatedResources = structuredPlan.resource_changes
     .filter((r) => r.change.actions.toString() === ['update'].toString())
@@ -175,9 +223,27 @@ export function internalRenderPlan(
   const ephemeralResources = structuredPlan.resource_changes
     .filter((r) => r.change.actions.toString() === ['open'].toString())
     .map((r) => r.address)
-  const importedCount = structuredPlan.resource_changes.filter(
-    (r) => r.change.importing !== undefined
-  ).length
+  // A resource can be imported, moved or forgotten *and* changed, so these overlap with the
+  // action-based partitions above and are collected independently of them.
+  const importedResources = structuredPlan.resource_changes
+    .filter((r) => r.change.importing !== undefined)
+    .map((r) => r.address)
+  const movedResources = structuredPlan.resource_changes
+    .filter((r) => r.previous_address !== undefined)
+    .reduce(
+      (acc, r) => {
+        acc[r.address] = r.previous_address as string
+        return acc
+      },
+      {} as Record<string, string>
+    )
+  const forgottenResources = structuredPlan.resource_changes
+    .filter(
+      (r) =>
+        r.change.actions.toString() === ['forget'].toString() ||
+        r.change.actions.toString() === ['create', 'forget'].toString()
+    )
+    .map((r) => r.address)
 
   return {
     createdResources: extractResources(createdResources, humanReadablePlan),
@@ -185,7 +251,9 @@ export function internalRenderPlan(
     recreatedResources: extractResources(recreatedResources, humanReadablePlan),
     deletedResources: extractResources(deletedResources, humanReadablePlan),
     ephemeralResources: extractResources(ephemeralResources, humanReadablePlan),
-    importedCount: importedCount > 0 ? importedCount : undefined
+    importedResources: importedResources.length > 0 ? importedResources : undefined,
+    movedResources: Object.keys(movedResources).length > 0 ? movedResources : undefined,
+    forgottenResources: forgottenResources.length > 0 ? forgottenResources : undefined
   }
 }
 

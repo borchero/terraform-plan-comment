@@ -1,0 +1,105 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.13.5",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "terraform_data.test",
+          "mode": "managed",
+          "type": "terraform_data",
+          "name": "test",
+          "provider_name": "terraform.io/builtin/terraform",
+          "schema_version": 0,
+          "values": {
+            "id": "imported-id",
+            "input": null,
+            "output": null,
+            "triggers_replace": null
+          },
+          "sensitive_values": {}
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "terraform_data.test",
+      "mode": "managed",
+      "type": "terraform_data",
+      "name": "test",
+      "provider_name": "terraform.io/builtin/terraform",
+      "change": {
+        "actions": [
+          "no-op"
+        ],
+        "before": {
+          "id": "imported-id",
+          "input": null,
+          "output": null,
+          "triggers_replace": null
+        },
+        "after": {
+          "id": "imported-id",
+          "input": null,
+          "output": null,
+          "triggers_replace": null
+        },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {},
+        "importing": {
+          "id": "imported-id"
+        }
+      }
+    }
+  ],
+  "prior_state": {
+    "format_version": "1.0",
+    "terraform_version": "1.13.5",
+    "values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "terraform_data.test",
+            "mode": "managed",
+            "type": "terraform_data",
+            "name": "test",
+            "provider_name": "terraform.io/builtin/terraform",
+            "schema_version": 0,
+            "values": {
+              "id": "imported-id",
+              "input": null,
+              "output": null,
+              "triggers_replace": null
+            },
+            "sensitive_values": {}
+          }
+        ]
+      }
+    }
+  },
+  "configuration": {
+    "provider_config": {
+      "terraform": {
+        "name": "terraform",
+        "full_name": "terraform.io/builtin/terraform"
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "terraform_data.test",
+          "mode": "managed",
+          "type": "terraform_data",
+          "name": "test",
+          "provider_config_key": "terraform",
+          "schema_version": 0
+        }
+      ]
+    }
+  },
+  "applyable": true,
+  "complete": true,
+  "errored": false
+}

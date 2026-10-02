@@ -1,0 +1,9 @@
+
+Terraform will perform the following actions:
+
+  # terraform_data.test will be imported
+    resource "terraform_data" "test" {
+        id = "imported-id"
+    }
+
+Plan: 1 to import, 0 to add, 0 to change, 0 to destroy.

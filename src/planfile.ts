@@ -15,6 +15,7 @@ const planfileSchema = z.object({
     .array(
       z.object({
         address: z.string(),
+        previous_address: z.string().optional(),
         change: z.object({
           actions: z.union([
             z.tuple([z.literal('no-op')]),

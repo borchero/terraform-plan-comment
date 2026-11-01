@@ -18,26 +18,26 @@
     "@actions/exec": "^3.0.0",
     "@actions/github": "^9.1.1",
     "semver": "^7.8.5",
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@octokit/webhooks-schemas": "^7.6.1",
     "@octokit/webhooks-types": "^7.6.1",
     "@types/jest": "^30.0.0",
-    "@types/node": "^26.6.3",
+    "@types/node": "^26.6.6",
     "@types/semver": "^7.8.0",
-    "@typescript-eslint/eslint-plugin": "^8.71.0",
-    "@typescript-eslint/parser": "^8.71.0",
-    "eslint": "^10.11.0",
+    "@typescript-eslint/eslint-plugin": "^8.72.1",
+    "@typescript-eslint/parser": "^8.72.1",
+    "eslint": "^10.13.0",
     "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-n": "^18.4.0",
-    "eslint-plugin-prettier": "^5.5.6",
+    "eslint-plugin-n": "^18.5.0",
+    "eslint-plugin-prettier": "^5.5.7",
     "eslint-plugin-promise": "^7.3.0",
     "jest": "^30.5.2",
-    "prettier": "^3.9.9",
-    "ts-jest": "^29.4.14",
-    "tsup": "^8.5.1",
-    "typescript": "^6.0.3"
+    "prettier": "^3.9.10",
+    "ts-jest": "^29.4.15",
+    "tsup": "^9.0.0",
+    "typescript": "^7.0.2"
   }
 }

@@ -38,6 +38,6 @@
     "prettier": "^3.9.10",
     "ts-jest": "^29.4.15",
     "tsup": "^9.0.0",
-    "typescript": "^7.0.2"
+    "typescript": "^6.0.3"
   }
 }

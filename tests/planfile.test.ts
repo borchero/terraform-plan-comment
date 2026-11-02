@@ -12,3 +12,22 @@ test.each([
   const data = JSON.parse(fs.readFileSync(`tests/fixtures/${arg}/plan.json`, 'utf-8'))
   parsePlanfileJSON(data)
 })
+
+test('parse import without id', () => {
+  const data = JSON.parse(
+    JSON.stringify({
+      format_version: '1.2',
+      resource_changes: [
+        {
+          address: 'test_resource.example',
+          change: {
+            actions: ['update'],
+            importing: {}
+          }
+        }
+      ]
+    })
+  )
+  const planfile = parsePlanfileJSON(data)
+  expect(planfile.resource_changes?.[0].change.importing).toEqual({})
+})

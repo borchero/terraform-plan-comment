@@ -60,6 +60,10 @@ outputs:
     description: The number of ephemeral resources
   num-resources-imported:
     description: The number of resources to be imported
+  num-resources-moved:
+    description: The number of resources to be moved to a new address
+  num-resources-forgotten:
+    description: The number of resources to be removed from state without being destroyed
 
 runs:
   using: node24

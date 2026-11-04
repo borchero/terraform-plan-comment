@@ -1,4 +1,5 @@
-import { chunkComment } from '../src/comment'
+import { chunkComment, renderMarkdown } from '../src/comment'
+import type { RenderedPlan } from '../src/render'
 
 describe('chunkComment', () => {
   const header = '## Terraform Plan'
@@ -51,5 +52,34 @@ describe('chunkComment', () => {
     for (const chunk of chunks) {
       expect(chunk.length).toBeLessThanOrEqual(65000)
     }
+  })
+})
+
+describe('renderMarkdown state changes', () => {
+  function render(plan: RenderedPlan): string {
+    return renderMarkdown({
+      plans: [plan],
+      header: '📝 Terraform Plan',
+      includeFooter: false,
+      expandDetails: false
+    })
+  }
+
+  test('moves are listed in order of the address they moved from', () => {
+    const body = render({
+      movedResources: {
+        'module.z.local_file.x': 'module.old_b.local_file.x',
+        'module.a.local_file.y': 'module.old_a.local_file.y'
+      }
+    })
+    expect(body).toContain(
+      '- `module.old_a.local_file.y` → `module.a.local_file.y`\n\n' +
+        '- `module.old_b.local_file.x` → `module.z.local_file.x`'
+    )
+  })
+
+  test('the summary omits state changes when there are none', () => {
+    expect(render({ forgottenResources: ['local_file.a'] })).toContain('State Changes:')
+    expect(render({ createdResources: { 'local_file.a': 'diff' } })).not.toContain('State Changes:')
   })
 })

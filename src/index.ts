@@ -49,6 +49,8 @@ async function run() {
   core.setOutput('num-resources-recreated', counts.recreated)
   core.setOutput('num-resources-ephemeral', counts.ephemeral)
   core.setOutput('num-resources-imported', counts.imported)
+  core.setOutput('num-resources-moved', counts.moved)
+  core.setOutput('num-resources-forgotten', counts.forgotten)
 
   // 5) Add plan to GitHub step summary
   await core.group('Adding plan to step summary', async () => {

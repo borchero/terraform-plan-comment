@@ -1,5 +1,6 @@
 import * as fs from 'fs'
-import { renderPlan } from '../src/render'
+import { internalRenderPlan, planIsEmpty, plansAreEmpty, renderPlan } from '../src/render'
+import { parsePlanfileJSON } from '../src/planfile'
 import { getExecOutput } from '@actions/exec'
 
 jest.mock('@actions/exec')
@@ -53,4 +54,129 @@ test.each(['basic/6-terragrunt-multiplan'])('render terragrunt successful', asyn
   expect(getExecOutput).toHaveBeenCalledTimes(3)
   // expects 1 plans after execution
   expect(plans).toHaveLength(3)
+})
+
+describe('planIsEmpty', () => {
+  test('a plan without any changes is empty', () => {
+    expect(planIsEmpty({})).toBe(true)
+  })
+
+  test.each([
+    ['imports', { importedResources: ['terraform_data.a'] }],
+    ['moves', { movedResources: { 'local_file.b': 'local_file.a' } }],
+    ['removes from state', { forgottenResources: ['local_file.a'] }]
+  ])('a plan that only %s is not empty', (_name, plan) => {
+    expect(planIsEmpty(plan)).toBe(false)
+  })
+
+  test('plans are not empty if any of them only changes state', () => {
+    expect(plansAreEmpty([{}, { movedResources: { 'local_file.b': 'local_file.a' } }])).toBe(false)
+  })
+})
+
+describe('internalRenderPlan state changes', () => {
+  // A resource can be imported, moved or forgotten *and* changed. These plans are awkward to
+  // produce with the fixture generator, so they are asserted against hand-built planfiles.
+  function render(resourceChanges: object[], humanReadablePlan = '') {
+    const planJson = JSON.parse(
+      JSON.stringify({ format_version: '1.2', resource_changes: resourceChanges })
+    )
+    return internalRenderPlan(parsePlanfileJSON(planJson), humanReadablePlan)
+  }
+
+  test('an import that also updates counts as both', () => {
+    const plan = render(
+      [
+        {
+          address: 'local_file.a',
+          change: { actions: ['update'], importing: { id: 'abc' } }
+        }
+      ],
+      '  # local_file.a will be updated in-place\n  ~ resource "local_file" "a" {\n      x = 1\n    }\n'
+    )
+    expect(plan.importedResources).toEqual(['local_file.a'])
+    expect(Object.keys(plan.updatedResources ?? {})).toEqual(['local_file.a'])
+  })
+
+  test('a move that also deletes counts as both', () => {
+    const plan = render(
+      [
+        {
+          address: 'local_file.b',
+          previous_address: 'local_file.a',
+          change: { actions: ['delete'] }
+        }
+      ],
+      '  # local_file.b will be destroyed\n  - resource "local_file" "b" {\n      x = 1\n    }\n'
+    )
+    expect(plan.movedResources).toEqual({ 'local_file.b': 'local_file.a' })
+    expect(Object.keys(plan.deletedResources ?? {})).toEqual(['local_file.b'])
+  })
+
+  // Terraform renders `create`-then-`forget` with the ` +/.` action symbol and, unlike most
+  // actions, a single-space `#` comment.
+  const createThenForgetPlan = [
+    ' # local_file.a must be replaced, but the existing object will not be destroyed',
+    ' # (destroy = false is set in the configuration)',
+    ' +/. resource "local_file" "a" {',
+    '      ~ filename = "./a.txt" -> "./b.txt" # forces replacement',
+    '      ~ id       = "8843d7f92416211de9ebb963ff4ce28125932878" -> (known after apply)',
+    '    }',
+    ''
+  ].join('\n')
+
+  test('a create-then-forget resource counts as both created and removed from state', () => {
+    const plan = render(
+      [{ address: 'local_file.a', change: { actions: ['create', 'forget'] } }],
+      createThenForgetPlan
+    )
+    expect(plan.forgottenResources).toEqual(['local_file.a'])
+    expect(Object.keys(plan.createdResources ?? {})).toEqual(['local_file.a'])
+    expect(plan.createdResources?.['local_file.a']).toContain(
+      '! filename = "./a.txt" -> "./b.txt" # forces replacement'
+    )
+  })
+
+  test('a resource is not extracted from the block of a longer address', () => {
+    const plan = render(
+      [{ address: 'local_file.a', change: { actions: ['create'] } }],
+      [
+        ' # local_file.ab will no longer be managed by Terraform, but will not be destroyed',
+        ' # (destroy = false is set in the configuration)',
+        ' . resource "local_file" "ab" {',
+        '        id = "forgotten"',
+        '    }',
+        '',
+        '  # local_file.a will be created',
+        '  + resource "local_file" "a" {',
+        '      + id = "created"',
+        '    }',
+        ''
+      ].join('\n')
+    )
+    expect(plan.createdResources?.['local_file.a']).toContain('+ id = "created"')
+    expect(plan.createdResources?.['local_file.a']).not.toContain('forgotten')
+  })
+
+  test('a reason mentioning a resource is not mistaken for the resource block', () => {
+    const plan = render(
+      [{ address: 'local_file.a', change: { actions: ['delete'] } }],
+      [
+        '  # local_file.a will be destroyed',
+        '  # (because the parent resource is being destroyed)',
+        '  - resource "local_file" "a" {',
+        '      - id = "gone"',
+        '    }',
+        ''
+      ].join('\n')
+    )
+    expect(plan.deletedResources?.['local_file.a']).toContain('```diff\n- id = "gone"\n```')
+  })
+
+  test('a plan with no state changes leaves the state fields undefined', () => {
+    const plan = render([{ address: 'local_file.a', change: { actions: ['no-op'] } }])
+    expect(plan.importedResources).toBeUndefined()
+    expect(plan.movedResources).toBeUndefined()
+    expect(plan.forgottenResources).toBeUndefined()
+  })
 })
